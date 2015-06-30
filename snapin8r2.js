@@ -272,7 +272,9 @@
         ]);
     }
 
-    lib.customBlockCache = {};
+    lib.customBlockSpecCache = {}; // Cache of converted custom block specs
+
+    // Special argument types
 
     lib.cArgs = {
         doRepeat: [1],
@@ -441,9 +443,9 @@
 
     // Scriptable (stage and sprites) conversion
 
-    function ScriptableConverter(data, zip, isStage, varNames, callback) {
+    function ScriptableConverter(data, s, isStage, varNames, callback) {
         this.data = data;
-        this.zip = zip;
+        this.s = s;
         this.isStage = isStage;
         this.varNames = varNames.slice(0);
         this.paramConversions = {};
@@ -474,6 +476,9 @@
             result.setAttribute('scale', data.scale);
             result.setAttribute('rotation', lib.rotationStyles[data.rotationStyle] || 0);
             result.setAttribute('draggable', data.isDraggable);
+            if (!data.visible) {
+                result.setAttribute('hidden', true);
+            }
         }
 
         result.setAttribute('costume', data.currentCostumeIndex + 1);
@@ -485,7 +490,7 @@
             result.setAttribute('codify', false);
             result.setAttribute('scheduled', true);
             result.appendChild(
-                el('pentrails', null, getAsset(data.penLayerID, data.penLayerMD5, this.zip))
+                el('pentrails', null, getAsset(data.penLayerID, data.penLayerMD5, this.s.zip))
             );
         } else {
             result.setAttribute('color', '0,0,255');
@@ -549,11 +554,11 @@
         var resolution = costume.bitmapResolution;
 
         try {
-            var image = getAsset(costume.baseLayerID, costume.baseLayerMD5, this.zip);
+            var image = getAsset(costume.baseLayerID, costume.baseLayerMD5, this.s.zip);
             if (resolution === 1) {
                 if ('text' in costume) {
                     console.log(costume.textLayerID);
-                    var text = getAsset(costume.textLayerID, costume.textLayerMD5, this.zip);
+                    var text = getAsset(costume.textLayerID, costume.textLayerMD5, this.s.zip);
                     addTextLayer(image, text, createXML);           
                 } else {
                     createXML(image);
@@ -589,7 +594,7 @@
     ScriptableConverter.prototype.convertSound = function(sound) {
         var result = el('sound');
         result.setAttribute('name', sound.soundName);
-        result.setAttribute('sound', getAsset(sound.soundID, sound.md5, this.zip));
+        result.setAttribute('sound', getAsset(sound.soundID, sound.md5, this.s.zip));
         return result;
     };
 
@@ -644,7 +649,7 @@
                 var child = children[loop.index];
                 if ('objName' in child) { // sprite
                     ScriptableConverter.convert(
-                        child, myself.zip, false, myself.varNames,
+                        child, myself.s, false, myself.varNames,
                         function(err, sprite) {
                             if (err) {
                                 callback(err);
@@ -726,26 +731,29 @@
     }
 
     ScriptableConverter.prototype.convertArg = function(arg, spec, i, customBlock) {
-        if (lib.cArgs[spec] && lib.cArgs[spec].indexOf(i) > -1) { // C input
-            return this.convertScript(arg, true, customBlock);
-        }
-        if (arg instanceof Array) { // reporter
-            return this.convertBlock(arg, customBlock);
-        }
-        if (lib.listArgs[spec] && lib.listArgs[spec].indexOf(i) > -1) { // list input
-            return el('block', {var: arg});
-        }
-        if (lib.colorArgs[spec] && lib.colorArgs[spec].indexOf(i) > -1) { // color input
-            return el('color', null, convertColor(arg));
-        }
-        if (lib.optionArgs[spec] && lib.optionArgs[spec].indexOf(i) > -1 && !(typeof arg === 'number')) {
-            // option input
-            return el('l', null,
-                el('option', null, arg)
-            );
-        }
-        if (lib.specialCaseArgs[spec] && lib.specialCaseArgs[spec][i]) { // special case
-            return lib.specialCaseArgs[spec][i](arg, this);
+        if (arg === null) return el('l');
+        if (spec) {
+            if (lib.cArgs[spec] && lib.cArgs[spec].indexOf(i) > -1) { // C input
+                return this.convertScript(arg, true, customBlock);
+            }
+            if (arg instanceof Array) { // reporter
+                return this.convertBlock(arg, customBlock);
+            }
+            if (lib.listArgs[spec] && lib.listArgs[spec].indexOf(i) > -1) { // list input
+                return el('block', {var: arg});
+            }
+            if (lib.colorArgs[spec] && lib.colorArgs[spec].indexOf(i) > -1) { // color input
+                return el('color', null, convertColor(arg));
+            }
+            if (lib.optionArgs[spec] && lib.optionArgs[spec].indexOf(i) > -1 && !(typeof arg === 'number')) {
+                // option input
+                return el('l', null,
+                    el('option', null, arg)
+                );
+            }
+            if (lib.specialCaseArgs[spec] && lib.specialCaseArgs[spec][i]) { // special case
+                return lib.specialCaseArgs[spec][i](arg, this);
+            }
         }
         return el('l', null, arg);// regular input
     }
@@ -804,7 +812,7 @@
         result.setAttribute('type', 'command');
         result.setAttribute('category', 'other');
         if (this.blockComments[blockID]) {
-            result.appendChild(this.comments[blockID]);
+            result.appendChild(this.blockComments[blockID]);
         }
         result.appendChild(el('header'));
         result.appendChild(el('code'));
@@ -813,9 +821,9 @@
         return result;
     }
 
-    ScriptableConverter.convert = function(data, zip, isStage, varNames, callback) {
+    ScriptableConverter.convert = function(data, s, isStage, varNames, callback) {
         try {
-            var converter = new ScriptableConverter(data, zip, isStage, varNames, callback);
+            var converter = new ScriptableConverter(data, s, isStage, varNames, callback);
             converter.convert();
         } catch (err) {
             callback(err);
@@ -1090,7 +1098,9 @@
     function convertCustomBlockSpec(spec) {
         var args = ['s', 'n', 'b'];
 
-        if (lib.customBlockCache[spec]) return lib.customBlockCache[spec];
+        if (lib.customBlockSpecCache.hasOwnProperty(spec)) {
+            return lib.customBlockSpecCache[spec];
+        }
 
         var result = spec.split(' ');
         result.map(function(part) {
@@ -1132,18 +1142,25 @@
         return result;
     }
 
-    /* Actual exported function */
+    function Snapin8r(file, projectName, callback) {
+        this.file = file;
+        this.zip = null;
+        this.projectName = projectName;
+        this.callback = callback;
+    }
 
-    window.Snapin8r = function(file, projectName, callback) {
+    Snapin8r.prototype.convert = function() {
+        var myself = this;
+
         try {
-            var zip = new JSZip(file);
-            var jsonData = JSON.parse(zip.file('project.json').asText());
+            this.zip = new JSZip(this.file);
+            var jsonData = JSON.parse(this.zip.file('project.json').asText());
         } catch (err) {
             return callback(err);
         }
 
         var project = el('project');
-        project.setAttribute('name', projectName);
+        project.setAttribute('name', this.projectName);
         project.setAttribute('app', 'Snapin8r2');
         project.setAttribute('version', 1);
         project.appendChild(el('notes', null, 'Converted by Snapin8r2.'));
@@ -1154,18 +1171,28 @@
         if ('variables' in jsonData || 'lists' in jsonData) {
             vars = convertVariables(jsonData, varNames);
         }
-        project.appendChild(vars);
 
         ScriptableConverter.convert(
-            jsonData, zip, true, varNames,
+            jsonData, this, true, varNames,
             function(err, stage) {
                 if (err) {
-                    callback(err);
+                    myself.callback(err);
                 } else {
                     project.appendChild(stage);
-                    callback(null, project.outerHTML);
+                    project.appendChild(el('hidden'));
+                    project.appendChild(el('headers'));
+                    project.appendChild(el('code'));
+                    project.appendChild(el('blocks'));
+                    project.appendChild(vars);
+                    myself.callback(null, project.outerHTML);
                 }
             }
         );
+    };
+
+    /* Actual exported function */
+
+    window.Snapin8r = function(file, projectName, callback) {
+        new Snapin8r(file, projectName, callback).convert();
     };
 })();
