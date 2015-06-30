@@ -129,7 +129,6 @@
         'changeVar:by:': 'doChangeVar',
         'showVariable:': 'doShowVar',
         'hideVariable:': 'doHideVar',
-        // 'contentsOfList:': '',
         'append:toList:': 'doAddToList',
         'deleteLine:ofList:': 'doDeleteFromList',
         'insert:at:ofList:': 'doInsertInList',
