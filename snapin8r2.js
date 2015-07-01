@@ -386,10 +386,10 @@
     lib.specialCaseArgs.reportMonadic[0] = function(arg) {
         var options = [
             'abs', 'floor', 'sqrt', 'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan', 'ln', 'e^'
+            'asin', 'acos', 'atan', 'ln', 'log', 'e^', '10^'
         ];
 
-        if (arg === 'e ^') arg = 'e^';
+        arg = arg.replace(/ \^$/, '^');
         if (options.indexOf(arg) > -1) {
             return el('l', null,
                 el('option', null, arg)
