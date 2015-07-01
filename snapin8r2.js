@@ -250,7 +250,6 @@
                 )
             );
         }
-
         throw new Error('Unknown stop argument: ' + arg);
     };
 
