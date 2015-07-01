@@ -12,6 +12,8 @@
 
     var lib = {};
 
+    // Regular blocks
+
     lib.blocks = {
         'forward:': 'forward',
         'turnRight:': 'turn',
@@ -140,6 +142,8 @@
         'hideList:': 'doHideVar'
     };
 
+    // Specially handled blocks
+
     lib.specialCaseBlocks = {};
 
     lib.specialCaseBlocks.readVariable = function(args) {
@@ -154,14 +158,15 @@
 
     lib.specialCaseBlocks.getParam = function(s, args, obj, customBlock) {
         var param = args[0];
-        if (customBlock) param = obj.paramConversions[customBlock][param];
+        if (customBlock) {
+            param = obj.paramConversions[customBlock][param];
+        }
         return el('block', {var: param});
     };
 
     lib.specialCaseBlocks.call = function(args, obj, customBlock) {
         var spec = convertCustomBlockSpec(args[0]);
         var args = args.slice(1);
-
         var result = el('custom-block', {s: spec, scope: obj.data.objName});
         for (var i = 0, l = args.length; i < l; i++) {
             result.appendChild(obj.convertArg(args[i], null, null, customBlock));
@@ -172,7 +177,6 @@
     lib.specialCaseBlocks.startScene = function(args, obj, customBlock) {
         var backdrop = args[0];
         var result;
-
         if (backdrop === 'next backdrop') {
             result = el('block', {s: 'doWearNextCostume'});
         } else if (backdrop === 'previous backdrop') {
@@ -338,16 +342,9 @@
     };
 
     function handleObjArg(arg, choices) {
-        var choiceConversions = {
-            _stage_: 'Stage',
-            _mouse_: 'mouse-pointer',
-            _edge_: 'edge',
-            _myself_: 'myself'
-        };
-
         if (choices.indexOf(arg) > -1) {
             return el('l', null,
-                el('option', null, choiceConversions[arg])
+                el('option', null, lib.specialObjNames[arg])
             );
         }
         return el('l', null, arg);
@@ -379,7 +376,6 @@
         if (arg === 'volume') {
             throw new Error('Unsupported attribute: volume');
         }
-
         return el('l', null, arg);
     };
 
@@ -395,8 +391,16 @@
                 el('option', null, arg)
             );
         }
-
         throw new Error('Unsupported math function: ' + arg);
+    };
+
+    // Other things
+
+    lib.specialObjNames = {
+        _stage_: 'Stage',
+        _mouse_: 'mouse-pointer',
+        _edge_: 'edge',
+        _myself_: 'myself'
     };
 
     lib.rotationStyles = {
@@ -439,7 +443,13 @@
         'Mystery Quest': 1.37
     };
 
-    /* Object Conversion */
+    lib.mimeTypes = {
+        svg: 'image/svg+xml',
+        png: 'image/png',
+        wav: 'audio/x-wav'
+    };
+
+    /* Object conversion */
 
     // Scriptable (stage and sprites) conversion
 
@@ -482,7 +492,9 @@
         }
 
         result.setAttribute('costume', data.currentCostumeIndex + 1);
-        if ('tempoBPM' in data) result.setAttribute('tempo', data.tempoBPM);
+        if ('tempoBPM' in data) {
+            result.setAttribute('tempo', data.tempoBPM);
+        }
 
         if (this.isStage) {
             result.setAttribute('threadsafe', false);
@@ -523,7 +535,6 @@
         var myself = this;
         var costumes = this.data.costumes;
         var result = el('list');
-
         if (costumes) {
             AsyncLoop.loop(
                 costumes.length,
@@ -557,9 +568,8 @@
             var image = getAsset(costume.baseLayerID, costume.baseLayerMD5, this.s.zip);
             if (resolution === 1) {
                 if ('text' in costume) {
-                    console.log(costume.textLayerID);
                     var text = getAsset(costume.textLayerID, costume.textLayerMD5, this.s.zip);
-                    addTextLayer(image, text, createXML);           
+                    addTextLayer(image, text, createXML);
                 } else {
                     createXML(image);
                 }
@@ -611,7 +621,6 @@
         var scriptsData = this.data.scripts;
         var blocks = el('blocks');
         var scripts = el('scripts');
-
         if (commentsData) {
             for (var i = 0, l = commentsData.length; i < l; i++) {
                 var comment = commentsData[i];
@@ -633,7 +642,6 @@
                 }
             }
         }
-
         this.result.appendChild(blocks);
         this.result.appendChild(scripts);
     };
@@ -690,45 +698,43 @@
 
     ScriptableConverter.prototype.convertScript = function(script, ignoreCoords, customBlock) {
         var result = el('script');
-
+        var blocks;
         if (script) {
             if (!ignoreCoords) {
                 result.setAttribute('x', script[0]);
                 result.setAttribute('y', script[1]);
-                var blocks = script[2];
+                blocks = script[2];
             } else {
-                var blocks = script;
+                blocks = script;
             }
             for (var i = 0, l = blocks.length; i < l; i++) {
                 result.appendChild(this.convertBlock(blocks[i], customBlock));
             }
         }
-
         return result;
-    }
+    };
 
     ScriptableConverter.prototype.convertBlock = function(block, customBlock) {
         var blockID = ++this.lastBlockID;
         var spec = block[0];
         var args = block.slice(1);
-
+        var result;
         if (lib.blocks.hasOwnProperty(spec)) {
             spec = lib.blocks[spec];
-            var result = el('block', {s: spec});
+            result = el('block', {s: spec});
             for (var i = 0, l = args.length; i < l; i++) {
                 result.appendChild(this.convertArg(args[i], spec, i, customBlock));
             }
         } else if (lib.specialCaseBlocks.hasOwnProperty(spec)) {
-            var result = lib.specialCaseBlocks[spec](args, this, customBlock);
+            result = lib.specialCaseBlocks[spec](args, this, customBlock);
         } else {
             throw new Error('Unknown spec: ' + spec);
         }
         if (this.blockComments[blockID]) {
             result.appendChild(this.blockComments[blockID]);
         }
-
         return result;
-    }
+    };
 
     ScriptableConverter.prototype.convertArg = function(arg, spec, i, customBlock) {
         if (arg === null) return el('l');
@@ -756,7 +762,7 @@
             }
         }
         return el('l', null, arg);// regular input
-    }
+    };
 
     // Custom block conversion
 
@@ -819,7 +825,7 @@
         result.appendChild(inputs);
         result.appendChild(script);
         return result;
-    }
+    };
 
     ScriptableConverter.convert = function(data, s, isStage, varNames, callback) {
         try {
@@ -836,7 +842,6 @@
         var variables = data.variables;
         var lists = data.lists;
         var result = el('variables');
-
         if (variables) {
             for (var i = 0, l = variables.length; i < l; i++) {
                 var variable = variables[i];
@@ -863,13 +868,11 @@
                 result.appendChild(el('variable', {name: list.listName}, listXML));
             }
         }
-
         return result;
     }
 
     function convertWatcher(watcher) {
         var result = el('watcher');
-
         if (watcher.cmd === 'getVar:') {
             if (!watcher.target === 'Stage') {
                 result.setAttribute('scope', watcher.target);
@@ -881,26 +884,26 @@
             if (!spec) throw new Error('Unsupported watcher: ' + watcher.cmd);
             result.setAttribute('s', spec);
         }
-
         var mode = lib.watcherStyles[watcher.mode] || 'normal';
         result.setAttribute('style', mode);
         if (mode === 'slider') {
             result.setAttribute('min', watcher.sliderMin);
             result.setAttribute('max', watcher.sliderMax);
         }
-
         result.setAttribute('x', watcher.x);
         result.setAttribute('y', watcher.y);
         result.setAttribute('color', convertColor(watcher.color));
-        if (!watcher.visible) result.setAttribute('hidden', true);
-
+        if (!watcher.visible) {
+            result.setAttribute('hidden', true);
+        }
         return result;
     }
 
     function convertListWatcher(list, objName) {
         var result = el('watcher');
-
-        if (objName !== 'Stage') result.setAttribute('scope', objName);
+        if (objName !== 'Stage') {
+            result.setAttribute('scope', objName);
+        }
         result.setAttribute('var', list.listName);
         result.setAttribute('style', 'normal');
         result.setAttribute('x', list.x);
@@ -908,8 +911,9 @@
         result.setAttribute('color', '243,118,29');
         result.setAttribute('extX', list.width);
         result.setAttribute('extY', list.height);
-        if (!list.visible) result.setAttribute('hidden', true);
-
+        if (!list.visible) {
+            result.setAttribute('hidden', true);
+        }
         return result;
     }
 
@@ -923,7 +927,6 @@
         var blockID = data[5];
         var text = data[6];
         var result = el('comment');
-
         if (blockID === -1) {
             result.setAttribute('x', x);
             result.setAttribute('y', y);
@@ -931,11 +934,10 @@
         result.setAttribute('w', width);
         result.setAttribute('collapsed', !open);
         result.textContent = text;
-
         return result;
     }
 
-    /* Various Utilities */
+    /* Various utilities */
 
     // Loop for async functions
 
@@ -965,12 +967,6 @@
     // Utilities for dealing with assets
 
     function getAsset(id, md5, zip) {
-        var mimeTypes = {
-            svg: 'image/svg+xml',
-            png: 'image/png',
-            wav: 'audio/x-wav'
-        };
-
         var ext = md5.slice(md5.lastIndexOf('.') + 1);
         var file = zip.file(id + '.' + ext);
         if (!file) throw new Error(fileName + ' does not exist');
@@ -993,7 +989,7 @@
                 string += String.fromCharCode(file[i]);
             }
         }
-        var mimeType = mimeTypes[ext];
+        var mimeType = lib.mimeTypes[ext];
         if (!mimeType) throw new Error('Unrecognized asset file type: ' + ext);
         return 'data:' + mimeType + ';base64,' + btoa(string);
     }
@@ -1141,6 +1137,8 @@
         if (a > 0 && a < 255) result += ',' + a;
         return result;
     }
+
+    /* Snapin8r object */
 
     function Snapin8r(file, projectName, callback) {
         this.file = file;
