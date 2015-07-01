@@ -8,6 +8,60 @@
 (function() {
     'use strict';
 
+    function Snapin8r(file, projectName, callback) {
+        this.file = file;
+        this.zip = null;
+        this.projectName = projectName;
+        this.callback = callback;
+    }
+
+    Snapin8r.prototype.convert = function() {
+        var myself = this;
+
+        try {
+            this.zip = new JSZip(this.file);
+            var jsonData = JSON.parse(this.zip.file('project.json').asText());
+        } catch (err) {
+            return callback(err);
+        }
+
+        var project = el('project');
+        project.setAttribute('name', this.projectName);
+        project.setAttribute('app', 'Snapin8r2');
+        project.setAttribute('version', 1);
+        project.appendChild(el('notes', null, 'Converted by Snapin8r2.'));
+        project.appendChild(el('thumbnail'));
+
+        var vars = el('variables');
+        var varNames = [];
+        if ('variables' in jsonData || 'lists' in jsonData) {
+            vars = convertVariables(jsonData, varNames);
+        }
+
+        ScriptableConverter.convert(
+            jsonData, this, true, varNames,
+            function(err, stage) {
+                if (err) {
+                    myself.callback(err);
+                } else {
+                    project.appendChild(stage);
+                    project.appendChild(el('hidden'));
+                    project.appendChild(el('headers'));
+                    project.appendChild(el('code'));
+                    project.appendChild(el('blocks'));
+                    project.appendChild(vars);
+                    myself.callback(null, project.outerHTML);
+                }
+            }
+        );
+    };
+
+    /* Actual exported function */
+
+    window.Snapin8r = function(file, projectName, callback) {
+        new Snapin8r(file, projectName, callback).convert();
+    };
+
     /* Individual translations for blocks and arguments */
 
     var lib = {};
@@ -1136,60 +1190,4 @@
         if (a > 0 && a < 255) result += ',' + a;
         return result;
     }
-
-    /* Snapin8r object */
-
-    function Snapin8r(file, projectName, callback) {
-        this.file = file;
-        this.zip = null;
-        this.projectName = projectName;
-        this.callback = callback;
-    }
-
-    Snapin8r.prototype.convert = function() {
-        var myself = this;
-
-        try {
-            this.zip = new JSZip(this.file);
-            var jsonData = JSON.parse(this.zip.file('project.json').asText());
-        } catch (err) {
-            return callback(err);
-        }
-
-        var project = el('project');
-        project.setAttribute('name', this.projectName);
-        project.setAttribute('app', 'Snapin8r2');
-        project.setAttribute('version', 1);
-        project.appendChild(el('notes', null, 'Converted by Snapin8r2.'));
-        project.appendChild(el('thumbnail'));
-
-        var vars = el('variables');
-        var varNames = [];
-        if ('variables' in jsonData || 'lists' in jsonData) {
-            vars = convertVariables(jsonData, varNames);
-        }
-
-        ScriptableConverter.convert(
-            jsonData, this, true, varNames,
-            function(err, stage) {
-                if (err) {
-                    myself.callback(err);
-                } else {
-                    project.appendChild(stage);
-                    project.appendChild(el('hidden'));
-                    project.appendChild(el('headers'));
-                    project.appendChild(el('code'));
-                    project.appendChild(el('blocks'));
-                    project.appendChild(vars);
-                    myself.callback(null, project.outerHTML);
-                }
-            }
-        );
-    };
-
-    /* Actual exported function */
-
-    window.Snapin8r = function(file, projectName, callback) {
-        new Snapin8r(file, projectName, callback).convert();
-    };
 })();
