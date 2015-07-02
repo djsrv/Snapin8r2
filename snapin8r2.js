@@ -450,10 +450,10 @@
     // Other things
 
     lib.specialObjNames = {
-        _stage_: 'Stage',
-        _mouse_: 'mouse-pointer',
         _edge_: 'edge',
-        _myself_: 'myself'
+        _mouse_: 'mouse-pointer',
+        _myself_: 'myself',
+        _stage_: 'Stage'
     };
 
     lib.rotationStyles = {
@@ -497,8 +497,8 @@
     };
 
     lib.mimeTypes = {
-        svg: 'image/svg+xml',
         png: 'image/png',
+        svg: 'image/svg+xml',
         wav: 'audio/x-wav'
     };
 
