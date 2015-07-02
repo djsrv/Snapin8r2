@@ -1145,7 +1145,7 @@
     };
 
     function convertCustomBlockSpec(spec) {
-        var args = ['s', 'n', 'b'];
+        var args = ['b', 'n', 's'];
 
         if (lib.customBlockSpecCache.hasOwnProperty(spec)) {
             return lib.customBlockSpecCache[spec];
