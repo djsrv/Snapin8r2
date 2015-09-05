@@ -361,10 +361,7 @@
         receiveKey: [0],
         reportKeyPressed: [0],
         reportDate: [0],
-        reportListItem: [0],
-        doDeleteFromList: [0],
-        doInsertInList: [1],
-        doReplaceInList: [0]
+        doDeleteFromList: [0]
     };
 
     lib.specialCaseArgs = {
@@ -376,7 +373,10 @@
         reportTouchingObject: {},
         reportDistanceTo: {},
         reportAttributeOf: {},
-        reportMonadic: {}
+        reportMonadic: {},
+        reportListItem: {},
+        doInsertInList: {},
+        doReplaceInList: {}
     };
 
     lib.specialCaseArgs.doFaceTowards[0] =
@@ -445,6 +445,17 @@
             );
         }
         throw new Error('Unsupported math function: ' + arg);
+    };
+
+    lib.specialCaseArgs.reportListItem[0] =
+    lib.specialCaseArgs.doInsertInList[1] =
+    lib.specialCaseArgs.doReplaceInList[0] = function(arg) {
+        if (arg === 'random' || arg === 'any') {
+            return el('l', null,
+                el('option', null, 'any')
+            );
+        }
+        return el('l', null, arg);
     };
 
     // Other things
