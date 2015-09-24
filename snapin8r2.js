@@ -433,18 +433,10 @@
     };
 
     lib.specialCaseArgs.reportMonadic[0] = function(arg) {
-        var options = [
-            'abs', 'floor', 'sqrt', 'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan', 'ln', 'log', 'e^', '10^'
-        ];
-
         arg = arg.replace(/ \^$/, '^');
-        if (options.indexOf(arg) > -1) {
-            return el('l', null,
-                el('option', null, arg)
-            );
-        }
-        throw new Error('Unsupported math function: ' + arg);
+        return el('l', null,
+            el('option', null, arg)
+        );
     };
 
     lib.specialCaseArgs.reportListItem[0] =
