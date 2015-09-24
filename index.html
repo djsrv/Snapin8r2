@@ -1,167 +1,167 @@
 <!DOCTYPE html>
 <html>
-	<head>
-	  <title>Snapin8r2</title>
-	  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
-	  <script src="snapin8r2.js"></script>
-	  <script>
-	    window.addEventListener("load", function() {
-	      var dropzone = document.getElementById("dropzone");
+  <head>
+    <title>Snapin8r2</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+    <script src="snapin8r2.js"></script>
+    <script>
+      window.addEventListener("load", function() {
+        var dropzone = document.getElementById("dropzone");
 
-	      function handleDrop(e) {
-	        this.style.borderColor = "#eee";
-	        e.stopPropagation(); // Stops some browsers from redirecting.
-	        e.preventDefault();
+        function handleDrop(e) {
+          this.style.borderColor = "#eee";
+          e.stopPropagation(); // Stops some browsers from redirecting.
+          e.preventDefault();
 
-	        var file = e.dataTransfer.files[0];
-	        var reader = new FileReader();
-	        var projectName = file.name.replace(/.sb2$/, "");
+          var file = e.dataTransfer.files[0];
+          var reader = new FileReader();
+          var projectName = file.name.replace(/.sb2$/, "");
 
-	        function conversionDone(err, result) {
-	          if (err) {
-	            var l = document.createElement("span");
-	            l.innerHTML = "Well, this is embarassing.<br/>The ancient geekish runes read: <code>" + err + "</code> Chances are, you use a special Scratch feature that we don't know how to convert. Sorry! You can help us out by reporting this error.";
-	            l.style.color = "#300";
-	            dropzone.style.backgroundColor = "#eaa";
-	            while (dropzone.firstChild) {
-	              dropzone.removeChild(dropzone.firstChild);
-	            }
-	            dropzone.appendChild(l);
-	            throw err;
-	          } else {
-	            var l = document.createElement("a");
-	            l.style.color = "green";
-	            l.href = "http://snap.berkeley.edu/snapsource/snap.html#open:" + encodeURIComponent(result);
-	            l.innerHTML = "Believe it or not, it worked. Click here to open your project!";
-	            var l2 = document.createElement("a");
-	            l2.style.color = "green";
-	            l2.href = URL.createObjectURL(new Blob([result], {
-	              type: "text/xml"
-	            }));
-	            l2.innerHTML = "Click here to download your project!";
-	            l2.download = projectName + ".xml";
-	            dropzone.style.backgroundColor = "#aea";
-	            while (dropzone.firstChild) {
-	              dropzone.removeChild(dropzone.firstChild);
-	            }
-	            dropzone.appendChild(l);
-	            dropzone.appendChild(document.createElement("br"));
-	            dropzone.appendChild(l2);
-	          }
-	        }
+          function conversionDone(err, result) {
+            if (err) {
+              var l = document.createElement("span");
+              l.innerHTML = "Well, this is embarassing.<br/>The ancient geekish runes read: <code>" + err + "</code> Chances are, you use a special Scratch feature that we don't know how to convert. Sorry! You can help us out by reporting this error.";
+              l.style.color = "#300";
+              dropzone.style.backgroundColor = "#eaa";
+              while (dropzone.firstChild) {
+                dropzone.removeChild(dropzone.firstChild);
+              }
+              dropzone.appendChild(l);
+              throw err;
+            } else {
+              var l = document.createElement("a");
+              l.style.color = "green";
+              l.href = "http://snap.berkeley.edu/snapsource/snap.html#open:" + encodeURIComponent(result);
+              l.innerHTML = "Believe it or not, it worked. Click here to open your project!";
+              var l2 = document.createElement("a");
+              l2.style.color = "green";
+              l2.href = URL.createObjectURL(new Blob([result], {
+                type: "text/xml"
+              }));
+              l2.innerHTML = "Click here to download your project!";
+              l2.download = projectName + ".xml";
+              dropzone.style.backgroundColor = "#aea";
+              while (dropzone.firstChild) {
+                dropzone.removeChild(dropzone.firstChild);
+              }
+              dropzone.appendChild(l);
+              dropzone.appendChild(document.createElement("br"));
+              dropzone.appendChild(l2);
+            }
+          }
 
-	        reader.onload = function(e) {
-	          Snapin8r(e.target.result, projectName, conversionDone);
-	        }
-	        reader.readAsArrayBuffer(file);
-	      }
+          reader.onload = function(e) {
+            Snapin8r(e.target.result, projectName, conversionDone);
+          }
+          reader.readAsArrayBuffer(file);
+        }
 
-	      function handleDragEnter(e) {
-	        this.style.borderColor = "orange";
-	      }
+        function handleDragEnter(e) {
+          this.style.borderColor = "orange";
+        }
 
-	      function hangleDragOver(e) {
-	        if (e.preventDefault) {
-	          e.preventDefault();
-	        }
-	      }
+        function hangleDragOver(e) {
+          if (e.preventDefault) {
+            e.preventDefault();
+          }
+        }
 
-	      function handleDragLeave(e) {
-	        this.style.borderColor = "#eee";
-	      }
-	      dropzone.addEventListener("drop", handleDrop, false);
+        function handleDragLeave(e) {
+          this.style.borderColor = "#eee";
+        }
+        dropzone.addEventListener("drop", handleDrop, false);
 
-	      dropzone.addEventListener("dragenter", handleDragEnter, false);
-	      dropzone.addEventListener("dragleave", handleDragLeave, false);
-	      dropzone.addEventListener("dragover", hangleDragOver, false);
-	    }, false);
-	  </script>
-	  <style>
-	    html {
-	      padding: 0px;
-	      height: 100%;
-	    }
+        dropzone.addEventListener("dragenter", handleDragEnter, false);
+        dropzone.addEventListener("dragleave", handleDragLeave, false);
+        dropzone.addEventListener("dragover", hangleDragOver, false);
+      }, false);
+    </script>
+    <style>
+      html {
+        padding: 0px;
+        height: 100%;
+      }
 
-	    * {
-	      box-sizing: border-box;
-	    }
+      * {
+        box-sizing: border-box;
+      }
 
-	    body {
-	      padding: 0px;
-	      margin: 0px;
-	      height: 100%;
-	      font-family: sans-serif;
-	    }
+      body {
+        padding: 0px;
+        margin: 0px;
+        height: 100%;
+        font-family: sans-serif;
+      }
 
-	    #wrapper {
-	      width: 100%;
-	      height: 100%;
-	    }
+      #wrapper {
+        width: 100%;
+        height: 100%;
+      }
 
-	    #left-column {
-	      width: 40%;
-	      padding: 10px;
-	      overflow-y: scroll;
-	      float: left;
-	      display: table;
-	    }
+      #left-column {
+        width: 40%;
+        padding: 10px;
+        overflow-y: scroll;
+        float: left;
+        display: table;
+      }
 
-	    #right-column {
-	      padding: 0px;
-	      float: left;
-	      width: 60%;
-	      height: 100%;
-	      padding: 10px;
-	      display: table;
-	    }
+      #right-column {
+        padding: 0px;
+        float: left;
+        width: 60%;
+        height: 100%;
+        padding: 10px;
+        display: table;
+      }
 
-	    #dropzone {
-	      border-style: dashed;
-	      border-radius: 30px;
-	      border-color: #eee;
-	      height: 100%;
-	      text-align: center;
-	      display: table-cell;
-	      vertical-align: middle;
-	      color: #aaa;
-	      padding: 10px;
-	    }
+      #dropzone {
+        border-style: dashed;
+        border-radius: 30px;
+        border-color: #eee;
+        height: 100%;
+        text-align: center;
+        display: table-cell;
+        vertical-align: middle;
+        color: #aaa;
+        padding: 10px;
+      }
 
-	    p {
-	      text-indent: 10px;
-	    }
+      p {
+        text-indent: 10px;
+      }
 
-	    h1,
-	    h2 {
-	      text-align: center;
-	    }
+      h1,
+      h2 {
+        text-align: center;
+      }
 
-	    ul {
-	      padding-left: 15px;
-	    }
-	  </style>
-	</head>
+      ul {
+        padding-left: 15px;
+      }
+    </style>
+  </head>
 
-	<body>
-	  <div id="wrapper">
-	    <div id="left-column">
-	      <h1>Snapin8r2</h1>
-	      <p>Snapin8r2 converts a subset <a href="http://scratch.mit.edu">Scratch 2.0</a> projects to <a href="http://snap.berkeley.edu">Snap!</a> projects. This page lets you use the current development version of Snapin8r to convert your projects.</p>
-	      <p>It cannot convert projects that use certain unsupported blocks. Furthermore, being on the bleeding edge means that you might get errors in conversion because of unresolved bugs&mdash;please report these <a href="https://github.com/djdolphin/Snapin8r2/issues">on Github</a>.</p>
-	      <h2>Credits</h2>
-	      <ul>
-	        <li>Snapin8r2 is based on <a href="http://hardmath123.github.io/Snapin8r/">Snapin8r</a> by <a href="http://hardmath123.github.io/">Hardmath123</a>.</li>
-	        <li>It was rewritten by <a href="https://scratch.mit.edu/users/djdolphin/">djdolphin</a> to (hopefully) work better.</a>
-	        </li>
-	        <li>It uses <a href="http://stuk.github.io/jszip/">JSZip</a> to read <code>.sb2</code> files.</li>
-	        <li>It contains SVG-handling code from <a href="http://phosphorus.github.io/">phosphorus</a> by <a href="https://github.com/nathan">Nathan Dinsmore</a>.</li>
-	      </ul>
-	    </div>
-	    <div id="right-column">
-	      <div id="dropzone">
-	        Drop an <code>sb2</code> file here&hellip;
-	      </div>
-	    </div>
-	  </div>
-	</body>
+  <body>
+    <div id="wrapper">
+      <div id="left-column">
+        <h1>Snapin8r2</h1>
+        <p>Snapin8r2 converts a subset <a href="http://scratch.mit.edu">Scratch 2.0</a> projects to <a href="http://snap.berkeley.edu">Snap!</a> projects. This page lets you use the current development version of Snapin8r to convert your projects.</p>
+        <p>It cannot convert projects that use certain unsupported blocks. Furthermore, being on the bleeding edge means that you might get errors in conversion because of unresolved bugs&mdash;please report these <a href="https://github.com/djdolphin/Snapin8r2/issues">on Github</a>.</p>
+        <h2>Credits</h2>
+        <ul>
+          <li>Snapin8r2 is based on <a href="http://hardmath123.github.io/Snapin8r/">Snapin8r</a> by <a href="http://hardmath123.github.io/">Hardmath123</a>.</li>
+          <li>It was rewritten by <a href="https://scratch.mit.edu/users/djdolphin/">djdolphin</a> to (hopefully) work better.</a>
+          </li>
+          <li>It uses <a href="http://stuk.github.io/jszip/">JSZip</a> to read <code>.sb2</code> files.</li>
+          <li>It contains SVG-handling code from <a href="http://phosphorus.github.io/">phosphorus</a> by <a href="https://github.com/nathan">Nathan Dinsmore</a>.</li>
+        </ul>
+      </div>
+      <div id="right-column">
+        <div id="dropzone">
+          Drop an <code>sb2</code> file here&hellip;
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
