@@ -5,6 +5,9 @@
     Rewritten to (hopefully) work better by djdolphin
 */
 
+/* jshint bitwise: false, unused: true */
+/* globals JSZip */
+
 (function() {
     'use strict';
 
@@ -17,12 +20,13 @@
 
     Snapin8r.prototype.convert = function() {
         var myself = this;
+      	var jsonData;
 
         try {
             this.zip = new JSZip(this.file);
-            var jsonData = JSON.parse(this.zip.file('project.json').asText());
+           	jsonData = JSON.parse(this.zip.file('project.json').asText());
         } catch (err) {
-            return callback(err);
+            return this.callback(err);
         }
 
         var project = el('project');
@@ -41,17 +45,15 @@
         ScriptableConverter.convert(
             jsonData, this, true, varNames,
             function(err, stage) {
-                if (err) {
-                    myself.callback(err);
-                } else {
-                    project.appendChild(stage);
-                    project.appendChild(el('hidden'));
-                    project.appendChild(el('headers'));
-                    project.appendChild(el('code'));
-                    project.appendChild(el('blocks'));
-                    project.appendChild(vars);
-                    myself.callback(null, project.outerHTML);
-                }
+                if (err) return myself.callback(err);
+
+                project.appendChild(stage);
+                project.appendChild(el('hidden'));
+                project.appendChild(el('headers'));
+                project.appendChild(el('code'));
+                project.appendChild(el('blocks'));
+                project.appendChild(vars);
+                myself.callback(null, project.outerHTML);
             }
         );
     };
@@ -210,7 +212,7 @@
         );
     };
 
-    lib.specialCaseBlocks.getParam = function(s, args, obj, customBlock) {
+    lib.specialCaseBlocks.getParam = function(args, obj, customBlock) {
         var param = args[0];
         if (customBlock) {
             param = obj.paramConversions[customBlock][param];
@@ -220,7 +222,7 @@
 
     lib.specialCaseBlocks.call = function(args, obj, customBlock) {
         var spec = convertCustomBlockSpec(args[0]);
-        var args = args.slice(1);
+        args = args.slice(1);
         var result = el('custom-block', {s: spec, scope: obj.data.objName});
         for (var i = 0, l = args.length; i < l; i++) {
             result.appendChild(obj.convertArg(args[i], null, null, customBlock));
@@ -255,7 +257,7 @@
         return result;
     };
 
-    lib.specialCaseBlocks.sceneName = function(args, obj) {
+    lib.specialCaseBlocks.sceneName = function() {
         return el('block', {s: 'reportAttributeOf'}, [
             el('l', null,
                 el('option', null, 'costume name')
@@ -276,7 +278,7 @@
         ]);
     };
 
-    lib.specialCaseBlocks.whenClicked = function(args) {
+    lib.specialCaseBlocks.whenClicked = function() {
         return el('block', {s: 'receiveInteraction'},
             el('l', null,
                 el('option', null, 'clicked')
@@ -572,8 +574,8 @@
                 myself.convertSounds();
                 myself.convertVariables();
                 myself.convertScripts();
-            } catch (err) {
-                return myself.callback(err);
+            } catch (error) {
+                return myself.callback(error);
             }
 
             if (myself.isStage) {
@@ -599,12 +601,9 @@
                     myself.convertCostume(
                         costume,
                         function(err, costume) {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                result.appendChild(el('item', null, costume));
-                                loop.next();
-                            }
+                            if (err) return callback(err);
+                            result.appendChild(el('item', null, costume));
+                            loop.next();
                         }
                     );
                 },
@@ -617,7 +616,6 @@
     };
 
     ScriptableConverter.prototype.convertCostume = function(costume, callback) {
-        var myself = this;
         var resolution = costume.bitmapResolution;
 
         try {
@@ -677,8 +675,9 @@
         var scriptsData = this.data.scripts;
         var blocks = el('blocks');
         var scripts = el('scripts');
+      	var i, l;
         if (commentsData) {
-            for (var i = 0, l = commentsData.length; i < l; i++) {
+            for (i = 0, l = commentsData.length; i < l; i++) {
                 var comment = commentsData[i];
                 var blockID = comment[5];
                 if (blockID > -1) {
@@ -689,7 +688,7 @@
             }
         }
         if (scriptsData) {
-            for (var i = 0, l = scriptsData.length; i < l; i++) {
+            for (i = 0, l = scriptsData.length; i < l; i++) {
                 var script = scriptsData[i];
                 if (script[2][0][0] === 'procDef') { // custom block
                     blocks.appendChild(this.convertCustomBlock(script[2]));
@@ -715,17 +714,18 @@
                     ScriptableConverter.convert(
                         child, myself.s, false, myself.varNames,
                         function(err, sprite) {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                result.appendChild(sprite);
-                                loop.next();
-                            }
+                            if (err) return callback(err);
+                            result.appendChild(sprite);
+                            loop.next();
                         }
                     );
                 } else {
                     if ('sliderMin' in child) { // watcher
-                        result.appendChild(convertWatcher(child));
+                        try {
+                            result.appendChild(convertWatcher(child));
+                        } catch (err) {
+                            return callback(err);
+                        }
                     }
                     loop.next();
                 }
@@ -792,32 +792,32 @@
         return result;
     };
 
-    ScriptableConverter.prototype.convertArg = function(arg, spec, i, customBlock) {
+    ScriptableConverter.prototype.convertArg = function(arg, spec, index, customBlock) {
         if (arg === null) return el('l');
         if (spec) {
-            if (lib.cArgs[spec] && lib.cArgs[spec].indexOf(i) > -1) { // C input
+            if (lib.cArgs[spec] && lib.cArgs[spec].indexOf(index) > -1) { // C input
                 return this.convertScript(arg, true, customBlock);
             }
             if (arg instanceof Array) { // reporter
                 return this.convertBlock(arg, customBlock);
             }
-            if (lib.listArgs[spec] && lib.listArgs[spec].indexOf(i) > -1) { // list input
+            if (lib.listArgs[spec] && lib.listArgs[spec].indexOf(index) > -1) { // list input
                 return el('block', {var: arg});
             }
-            if (lib.colorArgs[spec] && lib.colorArgs[spec].indexOf(i) > -1) { // color input
+            if (lib.colorArgs[spec] && lib.colorArgs[spec].indexOf(index) > -1) { // color input
                 return el('color', null, convertColor(arg));
             }
-            if (lib.optionArgs[spec] && lib.optionArgs[spec].indexOf(i) > -1 && !(typeof arg === 'number')) {
+            if (lib.optionArgs[spec] && lib.optionArgs[spec].indexOf(index) > -1 && typeof arg !== 'number') {
                 // option input
                 return el('l', null,
                     el('option', null, arg)
                 );
             }
-            if (lib.specialCaseArgs[spec] && lib.specialCaseArgs[spec][i]) { // special case
-                return lib.specialCaseArgs[spec][i](arg, this);
+            if (lib.specialCaseArgs[spec] && lib.specialCaseArgs[spec][index]) { // special case
+                return lib.specialCaseArgs[spec][index](arg, this);
             }
         }
-        return el('l', null, arg);// regular input
+        return el('l', null, arg); // regular input
     };
 
     // Custom block conversion
@@ -898,8 +898,9 @@
         var variables = data.variables;
         var lists = data.lists;
         var result = el('variables');
+      	var i, l;
         if (variables) {
-            for (var i = 0, l = variables.length; i < l; i++) {
+            for (i = 0, l = variables.length; i < l; i++) {
                 var variable = variables[i];
                 varNames.push(variable.name);
                 result.appendChild(
@@ -930,7 +931,7 @@
     function convertWatcher(watcher) {
         var result = el('watcher');
         if (watcher.cmd === 'getVar:') {
-            if (!watcher.target === 'Stage') {
+            if (watcher.target !== 'Stage') {
                 result.setAttribute('scope', watcher.target);
             }
             result.setAttribute('var', watcher.param);
@@ -1025,7 +1026,8 @@
     function getAsset(id, md5, zip) {
         var ext = md5.slice(md5.lastIndexOf('.') + 1);
         var file = zip.file(id + '.' + ext);
-        if (!file) throw new Error(fileName + ' does not exist');
+        if (!file) throw new Error(file + ' does not exist');
+        var string = '';
         if (ext === 'svg') {
             var div = document.createElement('div');
             div.style.visibility = 'hidden';
@@ -1036,11 +1038,10 @@
             document.body.appendChild(div);
             var svg = div.getElementsByTagName('svg')[0];
             fixSVG(svg);
-            var string = svg.outerHTML;
+            string = svg.outerHTML;
             document.body.removeChild(div);
         } else {
             file = file.asUint8Array();
-            var string = '';
             for (var i = 0, l = file.length; i < l; i++) {
                 string += String.fromCharCode(file[i]);
             }
@@ -1087,6 +1088,8 @@
     }
 
     function fixSVG(element) { // from phosphorus by Nathan Dinsmore
+      	var i, l;
+
         if (element.nodeType !== 1) return;
         if (element.nodeName === 'text') {
             var font = element.getAttribute('font-family') || '';
@@ -1108,7 +1111,7 @@
             if (lines.length > 1) {
                 element.textContent = lines[0];
                 var lineHeight = lib.lineHeights[font] || 1;
-                for (var i = 1, l = lines.length; i < l; i++) {
+                for (i = 1, l = lines.length; i < l; i++) {
                     var tspan = el('tspan');
                     tspan.textContent = lines[i];
                     tspan.setAttribute('x', x);
@@ -1121,19 +1124,19 @@
             element.setAttribute('y', 0);
         }
 
-        for (var i = 0, l = element.children.length; i < l; i++) {
+        for (i = 0, l = element.children.length; i < l; i++) {
             fixSVG(element.children[i]);
         }
-    };
+    }
 
     // Random utilities
 
     function el(tagName, attribs, content) {
-        var el = document.createElementNS(null, tagName);
+        var element = document.createElementNS(null, tagName);
         if (attribs) {
             for (var key in attribs) {
                 if (attribs.hasOwnProperty(key)) {
-                    el.setAttribute(key, attribs[key]);
+                    element.setAttribute(key, attribs[key]);
                 }
             }
         }
@@ -1141,11 +1144,11 @@
             if (!(content instanceof Array)) content = [content];
             for (var i = 0, l = content.length; i < l; i++) {
                 var c = content[i];
-                el.appendChild(c instanceof Node ? c : new Text(c));
+                element.appendChild(c instanceof Node ? c : new Text(c));
             }
         }
-        return el;
-    };
+        return element;
+    }
 
     function convertCustomBlockSpec(spec) {
         var args = ['b', 'n', 's'];
