@@ -813,7 +813,7 @@
                 return lib.specialCaseArgs[spec][i](arg, this);
             }
         }
-        return el('l', null, arg);// regular input
+        return el('l', null, arg); // regular input
     };
 
     // Custom block conversion
