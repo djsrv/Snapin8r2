@@ -41,17 +41,15 @@
         ScriptableConverter.convert(
             jsonData, this, true, varNames,
             function(err, stage) {
-                if (err) {
-                    myself.callback(err);
-                } else {
-                    project.appendChild(stage);
-                    project.appendChild(el('hidden'));
-                    project.appendChild(el('headers'));
-                    project.appendChild(el('code'));
-                    project.appendChild(el('blocks'));
-                    project.appendChild(vars);
-                    myself.callback(null, project.outerHTML);
-                }
+                if (err) return myself.callback(err);
+
+                project.appendChild(stage);
+                project.appendChild(el('hidden'));
+                project.appendChild(el('headers'));
+                project.appendChild(el('code'));
+                project.appendChild(el('blocks'));
+                project.appendChild(vars);
+                myself.callback(null, project.outerHTML);
             }
         );
     };
@@ -599,12 +597,9 @@
                     myself.convertCostume(
                         costume,
                         function(err, costume) {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                result.appendChild(el('item', null, costume));
-                                loop.next();
-                            }
+                            if (err) return callback(err);
+                            result.appendChild(el('item', null, costume));
+                            loop.next();
                         }
                     );
                 },
@@ -715,17 +710,18 @@
                     ScriptableConverter.convert(
                         child, myself.s, false, myself.varNames,
                         function(err, sprite) {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                result.appendChild(sprite);
-                                loop.next();
-                            }
+                            if (err) return callback(err);
+                            result.appendChild(sprite);
+                            loop.next();
                         }
                     );
                 } else {
                     if ('sliderMin' in child) { // watcher
-                        result.appendChild(convertWatcher(child));
+                        try {
+                            result.appendChild(convertWatcher(child));
+                        } catch (err) {
+                            return callback(err);
+                        }
                     }
                     loop.next();
                 }
