@@ -926,7 +926,7 @@
     function convertWatcher(watcher) {
         var result = el('watcher');
         if (watcher.cmd === 'getVar:') {
-            if (!watcher.target === 'Stage') {
+            if (watcher.target !== 'Stage') {
                 result.setAttribute('scope', watcher.target);
             }
             result.setAttribute('var', watcher.param);
