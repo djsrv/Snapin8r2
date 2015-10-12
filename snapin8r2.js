@@ -908,7 +908,7 @@
         result.appendChild(el('header'));
         result.appendChild(el('code'));
         result.appendChild(inputs);
-        result.appendChild(script);
+        if (script.children.length > 0) result.appendChild(script);
         return result;
     };
 
