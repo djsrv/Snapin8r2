@@ -11,6 +11,8 @@
 (function() {
     'use strict';
 
+    /* Main Snapin8r object */
+
     function Snapin8r(file, projectName, callback) {
         this.file = file;
         this.zip = null;
@@ -29,6 +31,7 @@
             return this.callback(err);
         }
 
+        // Project info
         var project = el('project');
         project.setAttribute('name', this.projectName);
         project.setAttribute('app', 'Snapin8r2');
@@ -36,12 +39,14 @@
         project.appendChild(el('notes', null, 'Converted by Snapin8r2.'));
         project.appendChild(el('thumbnail'));
 
+        // Global variables
         var vars = el('variables');
         var varNames = [];
         if ('variables' in jsonData || 'lists' in jsonData) {
             vars = convertVariables(jsonData, varNames);
         }
 
+        // Convert the stage
         ScriptableConverter.convert(
             jsonData, this, true, varNames,
             function(err, stage) {
@@ -64,7 +69,7 @@
         new Snapin8r(file, projectName, callback).convert();
     };
 
-    /* Individual translations for blocks and arguments */
+    /* Individual translations for blocks, arguments, and other things */
 
     var lib = {};
 
@@ -507,9 +512,7 @@
         wav: 'audio/x-wav'
     };
 
-    /* Object conversion */
-
-    // Scriptable (stage and sprites) conversion
+    /* Stage and sprite conversion */
 
     function ScriptableConverter(data, s, isStage, varNames, callback) {
         this.data = data;
@@ -531,12 +534,14 @@
         var result = this.result = el(this.isStage ? 'stage' : 'sprite');
         var data = this.data;
 
+        // Attributes are in the order they appear in Snap! XML files
+
         result.setAttribute('name', data.objName);
 
-        if (this.isStage) {
+        if (this.isStage) { // Stage-only
             result.setAttribute('width', 480);
             result.setAttribute('height', 360);
-        } else {
+        } else { // sprite-only
             result.setAttribute('idx', data.indexInLibrary);
             result.setAttribute('x', data.scratchX);
             result.setAttribute('y', data.scratchY);
@@ -554,7 +559,7 @@
             result.setAttribute('tempo', data.tempoBPM);
         }
 
-        if (this.isStage) {
+        if (this.isStage) { // Stage-only
             result.setAttribute('threadsafe', false);
             result.setAttribute('lines', 'round');
             result.setAttribute('codify', false);
@@ -562,11 +567,12 @@
             result.appendChild(
                 el('pentrails', null, getAsset(data.penLayerID, data.penLayerMD5, this.s.zip))
             );
-        } else {
-            result.setAttribute('color', '0,0,255');
+        } else { // sprite-only
+            result.setAttribute('color', '0,0,255'); // Scratch's default pen color
             result.setAttribute('pen', 'middle');
         }
 
+        // Convert media, variables, and scripts
         this.convertCostumes(function(err) {
             if (err) return myself.callback(err);
 
@@ -579,6 +585,7 @@
             }
 
             if (myself.isStage) {
+                // Convert sprites and watchers
                 myself.convertChildren(function(err) {
                     if (err) myself.callback(err);
                     else myself.callback(null, myself.result);
@@ -588,6 +595,8 @@
             }
         });
     };
+
+    // Costume conversion
 
     ScriptableConverter.prototype.convertCostumes = function(callback) {
         var myself = this;
@@ -644,6 +653,8 @@
         }
     };
 
+    // Sound conversion
+
     ScriptableConverter.prototype.convertSounds = function() {
         var sounds = this.data.sounds;
         var result = el('list');
@@ -670,6 +681,8 @@
         this.result.appendChild(vars);
     };
 
+    // Separate and convert scripts, custom blocks, and comments
+
     ScriptableConverter.prototype.convertScripts = function() {
         var commentsData = this.data.scriptComments;
         var scriptsData = this.data.scripts;
@@ -679,6 +692,12 @@
         if (commentsData) {
             for (i = 0, l = commentsData.length; i < l; i++) {
                 var comment = commentsData[i];
+
+                /*
+                    Comments attached to blocks need to be sorted out and added
+                    to the correct blocks later.
+                */
+
                 var blockID = comment[5];
                 if (blockID > -1) {
                     this.blockComments[blockID] = convertComment(comment);
@@ -700,6 +719,8 @@
         this.result.appendChild(blocks);
         this.result.appendChild(scripts);
     };
+
+    // Convert sprites and watchers
 
     ScriptableConverter.prototype.convertChildren = function(callback) {
         var myself = this;
@@ -771,7 +792,8 @@
     };
 
     ScriptableConverter.prototype.convertBlock = function(block, customBlock) {
-        var blockID = ++this.lastBlockID;
+        this.lastBlockID += 1
+        var blockID = this.lastBlockID;
         var spec = block[0];
         var args = block.slice(1);
         var result;
@@ -820,32 +842,39 @@
         return el('l', null, arg); // regular input
     };
 
-    // Custom block conversion
+    // Custom block definition conversion
 
     ScriptableConverter.prototype.convertCustomBlock = function(blocks) {
-        var blockID = ++this.lastBlockID;
+        this.lastBlockID += 1
+        var blockID = this.lastBlockID;
         var definition = blocks[0];
         var spec = convertCustomBlockSpec(definition[1]);
-        var oldArgNames = definition[2];
-        var defaultArgValues = definition[3];
+        var oldParamNames = definition[2];
+        var defaultArgs = definition[3];
         var atomic = definition[4];
+
+        /*
+            Snap! doesn't differentiate between parameters and variables, so
+            numbers are added to the end of parameters with the same names as
+            variables. Snap! also doesn't allow ' in parameter names. :'(
+        */
 
         var paramConversions = this.paramConversions[spec] = {};
         var varNames = this.varNames.slice(0);
-        var argNames = [];
+        var paramNames = [];
 
-        for (var i = 0, l = oldArgNames.length; i < l; i++) {
-            var oldArgName = oldArgNames[i];
-            var newArgName = unusedName(oldArgName.replace(/'/g, ''), varNames);
-            varNames.push(newArgName);
-            argNames.push(newArgName);
-            paramConversions[oldArgName] = newArgName;
+        for (var i = 0, l = oldParamNames.length; i < l; i++) {
+            var oldParam = oldParamNames[i];
+            var newParam = unusedName(oldParam.replace(/'/g, ''), varNames);
+            varNames.push(newParam);
+            paramNames.push(newParam);
+            paramConversions[oldParam] = newParam;
         }
 
         var specParts = spec.split(' ');
         var spec2 = '';
         var inputs = el('inputs');
-        var argIndex = -1;
+        var inputIndex = -1;
 
         for (i = 0, l = specParts.length; i < l; i++) {
             var part = specParts[i];
@@ -853,15 +882,15 @@
             if (part.charAt(0) !== '%') {
                 spec2 += part;
             } else {
-                argIndex += 1;
-                spec2 += "%'" + argNames[argIndex] + "'";
+                inputIndex += 1;
+                spec2 += "%'" + paramNames[inputIndex] + "'";
                 inputs.appendChild(
-                    el('input', {type: part}, defaultArgValues[argIndex])
+                    el('input', {type: part}, defaultArgs[inputIndex])
                 );
             }
         }
 
-        this.lastBlockID += argNames.length + 1; // accounts for a bug in Scratch
+        this.lastBlockID += paramNames.length + 1; // accounts for a bug in Scratch
         var script = this.convertScript(blocks.slice(1), true, spec);
         if (atomic) {
             script = el('script', null,
@@ -883,6 +912,32 @@
         return result;
     };
 
+    function convertCustomBlockSpec(spec) {
+        /*
+            Snap! escapes different characters in custom block specs than
+            Scratch does, so they have to be fixed. The fixed versions are
+            cached so they don't have to be found repeatedly.
+        */
+
+        var argTypes = ['b', 'n', 's'];
+
+        if (lib.customBlockSpecCache.hasOwnProperty(spec)) {
+            return lib.customBlockSpecCache[spec];
+        }
+
+        var result = spec.split(' ');
+        result.map(function(part) {
+            if (part.charAt(0) === '%') { // argument
+                if (argTypes.indexOf(part.slice(1)) > -1) return part;
+                throw new Error('Invalid custom block argument type: ' + part);
+            }
+            return part.replace(/\\(.)/g, '$1').replace(/^[\\%$]/, '\\$&');
+        });
+        return result.join(' ');
+    }
+
+    // Shorthand for new ScriptableConverter(...).convert()
+
     ScriptableConverter.convert = function(data, s, isStage, varNames, callback) {
         try {
             var converter = new ScriptableConverter(data, s, isStage, varNames, callback);
@@ -892,7 +947,7 @@
         }
     };
 
-    // Variable and list conversion
+    /* Variable and list conversion */
 
     function convertVariables(data, varNames) {
         var variables = data.variables;
@@ -974,7 +1029,7 @@
         return result;
     }
 
-    // Comment conversion
+    /* Comment conversion */
 
     function convertComment(data) {
         var x = data[0];
@@ -994,9 +1049,7 @@
         return result;
     }
 
-    /* Various utilities */
-
-    // Loop for async functions
+    /* Loop for async functions */
 
     function AsyncLoop(iterations, func, callback) {
         this.index = -1;
@@ -1021,7 +1074,7 @@
         new AsyncLoop(iterations, func, callback).next();
     };
 
-    // Utilities for dealing with assets
+    /* Asset utilties */
 
     function getAsset(id, md5, zip) {
         var ext = md5.slice(md5.lastIndexOf('.') + 1);
@@ -1129,7 +1182,7 @@
         }
     }
 
-    // Random utilities
+    /* Shorthand for creating XML elements */
 
     function el(tagName, attribs, content) {
         var element = document.createElementNS(null, tagName);
@@ -1150,23 +1203,7 @@
         return element;
     }
 
-    function convertCustomBlockSpec(spec) {
-        var args = ['b', 'n', 's'];
-
-        if (lib.customBlockSpecCache.hasOwnProperty(spec)) {
-            return lib.customBlockSpecCache[spec];
-        }
-
-        var result = spec.split(' ');
-        result.map(function(part) {
-            if (part.charAt(0) === '%') { // argument
-                if (args.indexOf(part.slice(1)) > -1) return part;
-                throw new Error('Invalid custom block argument type: ' + part);
-            }
-            return part.replace(/\\(.)/g, '$1').replace(/^[\\%$]/, '\\$&');
-        });
-        return result.join(' ');
-    }
+    /* Other stuff */
 
     function unusedName(name, used) {
         if (used.indexOf(name) === -1) return name;
