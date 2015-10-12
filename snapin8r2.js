@@ -534,7 +534,7 @@
         var result = this.result = el(this.isStage ? 'stage' : 'sprite');
         var data = this.data;
 
-        // Attributes are in the order they appear in Snap! XML files
+        // Attributes are in the order they appear in Snap! XML files.
 
         result.setAttribute('name', data.objName);
 
@@ -631,12 +631,15 @@
             var image = getAsset(costume.baseLayerID, costume.baseLayerMD5, this.s.zip);
             if (resolution === 1) {
                 if ('text' in costume) {
+                    // Text in costumes converted from Scratch 1.4 is stored in
+                    // a separate layer.
                     var text = getAsset(costume.textLayerID, costume.textLayerMD5, this.s.zip);
                     addTextLayer(image, text, createXML);
                 } else {
                     createXML(image);
                 }
             } else {
+                // Scratch stores bitmap images at double the actual size.
                 resizeImage(image, 1 / resolution, createXML);
             }
         } catch (err) {
@@ -692,12 +695,8 @@
         if (commentsData) {
             for (i = 0, l = commentsData.length; i < l; i++) {
                 var comment = commentsData[i];
-
-                /*
-                    Comments attached to blocks need to be sorted out and added
-                    to the correct blocks later.
-                */
-
+                // Comments attached to blocks are sorted out and added to the
+                // correct blocks later.
                 var blockID = comment[5];
                 if (blockID > -1) {
                     this.blockComments[blockID] = convertComment(comment);
@@ -853,11 +852,9 @@
         var defaultArgs = definition[3];
         var atomic = definition[4];
 
-        /*
-            Snap! doesn't differentiate between parameters and variables, so
-            numbers are added to the end of parameters with the same names as
-            variables. Snap! also doesn't allow ' in parameter names. :'(
-        */
+        // Snap! doesn't differentiate between parameters and variables, so
+        // numbers are added to the end of parameters with the same names as
+        // variables. Snap! also doesn't allow ' in parameter names. :'(
 
         var paramConversions = this.paramConversions[spec] = {};
         var varNames = this.varNames.slice(0);
@@ -913,11 +910,9 @@
     };
 
     function convertCustomBlockSpec(spec) {
-        /*
-            Snap! escapes different characters in custom block specs than
-            Scratch does, so they have to be fixed. The fixed versions are
-            cached so they don't have to be found repeatedly.
-        */
+        // Snap! escapes different characters in custom block specs than Scratch
+        // does, so they have to be fixed. The fixed versions are cached so they
+        // don't have to be found repeatedly.
 
         var argTypes = ['b', 'n', 's'];
 
