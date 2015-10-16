@@ -708,7 +708,7 @@
         if (scriptsData) {
             for (i = 0, l = scriptsData.length; i < l; i++) {
                 var script = scriptsData[i];
-                if (script[2][0][0] === 'procDef') { // custom block
+                if (script[2][0][0] === 'procDef') { // custom block definition
                     blocks.appendChild(this.convertCustomBlock(script[2]));
                 } else {
                     scripts.appendChild(this.convertScript(script));
@@ -1015,7 +1015,7 @@
         result.setAttribute('style', 'normal');
         result.setAttribute('x', list.x);
         result.setAttribute('y', list.y);
-        result.setAttribute('color', '243,118,29');
+        result.setAttribute('color', '243,118,29'); // variable color
         result.setAttribute('extX', list.width);
         result.setAttribute('extY', list.height);
         if (!list.visible) {
