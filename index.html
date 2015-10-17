@@ -10,6 +10,10 @@
 
         function handleDrop(e) {
           this.style.borderColor = "#eee";
+          this.style.backgroundColor = "#fff";
+          this.style.color = "#aaa";
+          this.textContent = "Converting...";
+
           e.stopPropagation(); // Stops some browsers from redirecting.
           e.preventDefault();
 
@@ -17,36 +21,78 @@
           var reader = new FileReader();
           var projectName = file.name.replace(/.sb2$/, "");
 
-          function conversionDone(err, result) {
+          function conversionDone(err, result, warnings) {
+            console.log(warnings);
+
+            var el, li, msg;
+
+            while (dropzone.firstChild) {
+              dropzone.removeChild(dropzone.firstChild);
+            }
+            dropzone.style.color = "#000";
+
             if (err) {
-              var l = document.createElement("span");
-              l.innerHTML = "Well, this is embarassing.<br/>The ancient geekish runes read: <code>" + err + "</code> Chances are, you use a special Scratch feature that we don't know how to convert. Sorry! You can help us out by reporting this error.";
-              l.style.color = "#300";
               dropzone.style.backgroundColor = "#eaa";
-              while (dropzone.firstChild) {
-                dropzone.removeChild(dropzone.firstChild);
-              }
-              dropzone.appendChild(l);
+
+              el = document.createElement("span");
+              el.innerHTML = "Well, this is embarassing.<br/>The ancient geekish runes read:";
+              dropzone.appendChild(el);
+
+              dropzone.appendChild(document.createElement("br"));
+
+              el = document.createElement("code");
+              el.textContent = err;
+              dropzone.appendChild(el);
+
+              dropzone.appendChild(document.createElement("br"));
+
+              el = document.createElement("span");
+              el.textContent = "Chances are, this is a bug. Sorry! You can help us out by reporting this error.";
+              dropzone.appendChild(el);
+
               throw err;
             } else {
-              var l = document.createElement("a");
-              l.style.color = "green";
-              l.href = "http://snap.berkeley.edu/snapsource/snap.html#open:" + encodeURIComponent(result);
-              l.innerHTML = "Believe it or not, it worked. Click here to open your project!";
-              var l2 = document.createElement("a");
-              l2.style.color = "green";
-              l2.href = URL.createObjectURL(new Blob([result], {
+              dropzone.style.backgroundColor = warnings ? "#eea" : "#aea";
+              var linkColor = warnings ? "orange" : "green";
+
+              el = document.createElement("span");
+              el.textContent = "Believe it or not, it worked!"
+              dropzone.appendChild(el);
+
+              dropzone.appendChild(document.createElement("br"));
+
+              if (warnings && warnings.length > 0) {
+                el = document.createElement("span");
+                el.textContent = "However, there were some warnings:";
+                dropzone.appendChild(el);
+
+                el = document.createElement("ul");
+                for (var i = 0, l = warnings.length; i < l; i++) {
+                  li = document.createElement("li");
+                  msg = document.createElement("code");
+                  msg.textContent = warnings[i];
+                  li.appendChild(msg);
+                  el.appendChild(li);
+                }
+                dropzone.appendChild(el);
+              }
+
+              el = document.createElement("a");
+              el.style.color = linkColor;
+              el.href = "http://snap.berkeley.edu/snapsource/snap.html#open:" + encodeURIComponent(result);
+              el.textContent = "Click here to open your project!";
+              dropzone.appendChild(el);
+
+              dropzone.appendChild(document.createElement("br"));
+
+              el = document.createElement("a");
+              el.style.color = linkColor;
+              el.href = URL.createObjectURL(new Blob([result], {
                 type: "text/xml"
               }));
-              l2.innerHTML = "Click here to download your project!";
-              l2.download = projectName + ".xml";
-              dropzone.style.backgroundColor = "#aea";
-              while (dropzone.firstChild) {
-                dropzone.removeChild(dropzone.firstChild);
-              }
-              dropzone.appendChild(l);
-              dropzone.appendChild(document.createElement("br"));
-              dropzone.appendChild(l2);
+              el.textContent = "Click here to download your project!";
+              el.download = projectName + ".xml";
+              dropzone.appendChild(el);
             }
           }
 
@@ -60,17 +106,17 @@
           this.style.borderColor = "orange";
         }
 
+        function handleDragLeave(e) {
+          this.style.borderColor = "#eee";
+        }
+
         function hangleDragOver(e) {
           if (e.preventDefault) {
             e.preventDefault();
           }
         }
 
-        function handleDragLeave(e) {
-          this.style.borderColor = "#eee";
-        }
         dropzone.addEventListener("drop", handleDrop, false);
-
         dropzone.addEventListener("dragenter", handleDragEnter, false);
         dropzone.addEventListener("dragleave", handleDragLeave, false);
         dropzone.addEventListener("dragover", hangleDragOver, false);
@@ -131,8 +177,7 @@
         text-indent: 10px;
       }
 
-      h1,
-      h2 {
+      h1, h2 {
         text-align: center;
       }
 
@@ -159,7 +204,7 @@
       </div>
       <div id="right-column">
         <div id="dropzone">
-          Drop an <code>sb2</code> file here&hellip;
+          Drop a <code>.sb2</code> file here&hellip;
         </div>
       </div>
     </div>
