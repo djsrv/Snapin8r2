@@ -18,6 +18,7 @@
         this.zip = null;
         this.projectName = projectName;
         this.callback = callback;
+        this.warnings = [];
     }
 
     Snapin8r.prototype.convert = function() {
@@ -58,9 +59,18 @@
                 project.appendChild(el('code'));
                 project.appendChild(el('blocks'));
                 project.appendChild(vars);
-                myself.callback(null, project.outerHTML);
+
+                myself.callback(
+                  null,
+                  project.outerHTML,
+                  myself.warnings.length > 0 ? myself.warnings : null
+                );
             }
         );
+    };
+
+    Snapin8r.prototype.warn = function(warning) {
+        this.warnings.push(warning);
     };
 
     /* Actual exported function */
@@ -311,7 +321,8 @@
                 )
             );
         }
-        throw new Error('Unknown stop argument: ' + arg);
+        obj.s.warn('Unknown stop argument: ' + arg);
+        return null;
     };
 
     lib.specialCaseBlocks['concatenate:with:'] = function(args, obj, customBlock) {
@@ -417,7 +428,8 @@
                 el('option', null, arg)
             );
         }
-        throw new Error('Unsupported graphic effect: ' + arg);
+        obj.s.warn('Unsupported graphic effect: ' + arg);
+        return null;
     };
 
     lib.specialCaseArgs.reportAttributeOf[0] = function(arg, obj) {
@@ -707,11 +719,12 @@
         }
         if (scriptsData) {
             for (i = 0, l = scriptsData.length; i < l; i++) {
-                var script = scriptsData[i];
-                if (script[2][0][0] === 'procDef') { // custom block
-                    blocks.appendChild(this.convertCustomBlock(script[2]));
+                var scriptData = scriptsData[i];
+                if (scriptData[2][0][0] === 'procDef') { // custom block definition
+                    blocks.appendChild(this.convertCustomBlock(scriptData[2]));
                 } else {
-                    scripts.appendChild(this.convertScript(script));
+                    var script = this.convertScript(scriptData);
+                    if (script) scripts.appendChild(script);
                 }
             }
         }
@@ -741,11 +754,8 @@
                     );
                 } else {
                     if ('sliderMin' in child) { // watcher
-                        try {
-                            result.appendChild(convertWatcher(child));
-                        } catch (err) {
-                            return callback(err);
-                        }
+                        var watcher = convertWatcher(child, myself.s);
+                        if (watcher) result.appendChild(watcher);
                     }
                     loop.next();
                 }
@@ -772,11 +782,11 @@
 
     // Script, block, and argument conversion
 
-    ScriptableConverter.prototype.convertScript = function(script, ignoreCoords, customBlock) {
+    ScriptableConverter.prototype.convertScript = function(script, embedded, customBlock) {
         var result = el('script');
         var blocks;
         if (script) {
-            if (!ignoreCoords) {
+            if (!embedded) {
                 result.setAttribute('x', script[0]);
                 result.setAttribute('y', script[1]);
                 blocks = script[2];
@@ -784,9 +794,11 @@
                 blocks = script;
             }
             for (var i = 0, l = blocks.length; i < l; i++) {
-                result.appendChild(this.convertBlock(blocks[i], customBlock));
+                var block = this.convertBlock(blocks[i], customBlock);
+                if (block) result.appendChild(block);
             }
         }
+        if (!embedded && result.children.length === 0) return null;
         return result;
     };
 
@@ -800,12 +812,15 @@
             spec = lib.blocks[spec];
             result = el('block', {s: spec});
             for (var i = 0, l = args.length; i < l; i++) {
-                result.appendChild(this.convertArg(args[i], spec, i, customBlock));
+                var arg = this.convertArg(args[i], spec, i, customBlock);
+                if (arg) result.appendChild(arg);
+                else return null;
             }
         } else if (lib.specialCaseBlocks.hasOwnProperty(spec)) {
             result = lib.specialCaseBlocks[spec](args, this, customBlock);
         } else {
-            throw new Error('Unknown spec: ' + spec);
+            this.s.warn('Unknown spec: ' + spec);
+            return null;
         }
         if (this.blockComments[blockID]) {
             result.appendChild(this.blockComments[blockID]);
@@ -814,14 +829,13 @@
     };
 
     ScriptableConverter.prototype.convertArg = function(arg, spec, index, customBlock) {
-        if (arg === null) return el('l');
+        if (spec && lib.cArgs[spec] && lib.cArgs[spec].indexOf(index) > -1) { // C input
+            return this.convertScript(arg, true, customBlock);
+        }
+        if (arg.constructor === Array) { // reporter
+            return this.convertBlock(arg, customBlock) || el('l');
+        }
         if (spec) {
-            if (lib.cArgs[spec] && lib.cArgs[spec].indexOf(index) > -1) { // C input
-                return this.convertScript(arg, true, customBlock);
-            }
-            if (arg instanceof Array) { // reporter
-                return this.convertBlock(arg, customBlock);
-            }
             if (lib.listArgs[spec] && lib.listArgs[spec].indexOf(index) > -1) { // list input
                 return el('block', {var: arg});
             }
@@ -978,7 +992,7 @@
         return result;
     }
 
-    function convertWatcher(watcher) {
+    function convertWatcher(watcher, s) {
         var result = el('watcher');
         if (watcher.cmd === 'getVar:') {
             if (watcher.target !== 'Stage') {
@@ -988,7 +1002,10 @@
         } else {
             result.setAttribute('scope', watcher.target);
             var spec = lib.watchers[watcher.cmd];
-            if (!spec) throw new Error('Unsupported watcher: ' + watcher.cmd);
+            if (!spec) {
+              s.warn('Unsupported watcher: ' + watcher.cmd);
+              return null;
+            }
             result.setAttribute('s', spec);
         }
         var mode = lib.watcherStyles[watcher.mode] || 'normal';
@@ -1015,7 +1032,7 @@
         result.setAttribute('style', 'normal');
         result.setAttribute('x', list.x);
         result.setAttribute('y', list.y);
-        result.setAttribute('color', '243,118,29');
+        result.setAttribute('color', '243,118,29'); // variable color
         result.setAttribute('extX', list.width);
         result.setAttribute('extY', list.height);
         if (!list.visible) {
@@ -1188,8 +1205,8 @@
                 }
             }
         }
-        if (content) {
-            if (!(content instanceof Array)) content = [content];
+        if (content != undefined) {
+            if (content.constructor !== Array) content = [content];
             for (var i = 0, l = content.length; i < l; i++) {
                 var c = content[i];
                 element.appendChild(c instanceof Node ? c : new Text(c));
