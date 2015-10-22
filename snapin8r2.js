@@ -808,7 +808,7 @@
         var spec = block[0];
         var args = block.slice(1);
         var result;
-        if (lib.blocks.hasOwnProperty(spec)) {
+        if (lib.blocks[spec]) {
             spec = lib.blocks[spec];
             result = el('block', {s: spec});
             for (var i = 0, l = args.length; i < l; i++) {
@@ -816,7 +816,7 @@
                 if (arg) result.appendChild(arg);
                 else return null;
             }
-        } else if (lib.specialCaseBlocks.hasOwnProperty(spec)) {
+        } else if (lib.specialCaseBlocks[spec]) {
             result = lib.specialCaseBlocks[spec](args, this, customBlock);
         } else {
             this.s.warn('Unknown spec: ' + spec);
