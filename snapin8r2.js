@@ -446,7 +446,8 @@
             );
         }
         if (arg === 'volume') {
-            throw new Error('Unsupported attribute: volume');
+            obj.s.warn('Unsupported attribute: volume');
+            return null;
         }
         return el('l', null, arg);
     };
