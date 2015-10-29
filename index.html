@@ -12,7 +12,7 @@
           this.style.borderColor = "#eee";
           this.style.backgroundColor = "#fff";
           this.style.color = "#aaa";
-          this.textContent = "Converting...";
+          this.innerHTML = "Converting&hellip;";
 
           e.stopPropagation(); // Stops some browsers from redirecting.
           e.preventDefault();
@@ -22,8 +22,6 @@
           var projectName = file.name.replace(/.sb2$/, "");
 
           function conversionDone(err, result, warnings) {
-            console.log(warnings);
-
             var el, li, msg;
 
             while (dropzone.firstChild) {
@@ -47,7 +45,7 @@
               dropzone.appendChild(document.createElement("br"));
 
               el = document.createElement("span");
-              el.textContent = "Chances are, this is a bug. Sorry! You can help us out by reporting this error.";
+              el.innerHTML = "Chances are, this is a bug. Sorry! You can help us out by reporting this error.";
               dropzone.appendChild(el);
 
               throw err;
@@ -56,14 +54,14 @@
               var linkColor = warnings ? "orange" : "green";
 
               el = document.createElement("span");
-              el.textContent = "Believe it or not, it worked!"
+              el.innerHTML = "Believe it or not, it worked!"
               dropzone.appendChild(el);
 
               dropzone.appendChild(document.createElement("br"));
 
               if (warnings && warnings.length > 0) {
                 el = document.createElement("span");
-                el.textContent = "However, there were some warnings:";
+                el.innerHTML = "However, there were some warnings:";
                 dropzone.appendChild(el);
 
                 el = document.createElement("ul");
@@ -80,7 +78,7 @@
               el = document.createElement("a");
               el.style.color = linkColor;
               el.href = "http://snap.berkeley.edu/snapsource/snap.html#open:" + encodeURIComponent(result);
-              el.textContent = "Click here to open your project!";
+              el.innerHTML = "Click here to open your project!";
               dropzone.appendChild(el);
 
               dropzone.appendChild(document.createElement("br"));
@@ -90,7 +88,7 @@
               el.href = URL.createObjectURL(new Blob([result], {
                 type: "text/xml"
               }));
-              el.textContent = "Click here to download your project!";
+              el.innerHTML = "Click here to download your project!";
               el.download = projectName + ".xml";
               dropzone.appendChild(el);
             }
@@ -191,8 +189,9 @@
     <div id="wrapper">
       <div id="left-column">
         <h1>Snapin8r2</h1>
-        <p>Snapin8r2 converts a subset <a href="http://scratch.mit.edu">Scratch 2.0</a> projects to <a href="http://snap.berkeley.edu">Snap!</a> projects. This page lets you use the current development version of Snapin8r to convert your projects.</p>
-        <p>It cannot convert projects that use certain unsupported blocks. Furthermore, being on the bleeding edge means that you might get errors in conversion because of unresolved bugs&mdash;please report these <a href="https://github.com/djdolphin/Snapin8r2/issues">on Github</a>.</p>
+        <p>Snapin8r2 converts <a href="http://scratch.mit.edu">Scratch 2.0</a> projects to <a href="http://snap.berkeley.edu">Snap!</a> projects. This page lets you use the current development version of Snapin8r2 to convert your projects.</p>
+        <p>It does not convert certain unsupported blocks and throws a warning when these are encountered.</p>
+        <p>Furthermore, being on the bleeding edge means that you might get errors in conversion because of unresolved bugs&mdash;please report these <a href="https://github.com/djdolphin/Snapin8r2/issues">on Github</a>.</p>
         <h2>Credits</h2>
         <ul>
           <li>Snapin8r2 is based on <a href="http://hardmath123.github.io/Snapin8r/">Snapin8r</a> by <a href="http://hardmath123.github.io/">Hardmath123</a>.</li>
