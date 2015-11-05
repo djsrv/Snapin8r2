@@ -1,0 +1,70 @@
+body {
+	width: 100%; height: 100%;
+	padding:0; margin:0;
+	font-family: Palatino, Georgia, serif
+}
+
+body[data-customization*="float"] {background-color: #DDD;}
+body[data-customization*="float"] #body-wrapper {
+	position: relative;
+	left: 10%;
+	right: 10%;
+	top: 0;
+	width: calc(80% - 40px);
+	min-height: calc(100% - 40px);
+	background-color: white;
+}
+
+#body-wrapper {
+	padding: 20px;
+	color: #333;
+}
+
+#about {
+	margin-top: 50px;
+	padding: 4px 12px;
+	border: 20px solid rgba(0, 0, 0, 0);
+	transition-duration: 0.5s;
+}
+#activate {text-align: center;}
+
+body section {
+	padding: 20px;
+	margin-top: 20px;
+}
+
+ul {list-style: none;margin-left: -25px;}
+ul li {line-height: 20px;}
+ul li:nth-child(1) {margin-top: -15px;}
+
+body[data-customization*="elembg"] section {background-color: rgba(230, 230, 230, 0.9); transition-duration: 0.25s;}
+body[data-customization*="elembg"][data-customization*="elembgR"] section {border-radius: 10px;}
+body[data-customization*="floatR"] #body-wrapper {
+	border: 10px solid rgba(0, 0, 0, 0);
+	top: 10px;
+	border-radius: 15px;
+	width: calc(80% - 80px);
+	min-height: calc(100% - 120px);
+}
+body[data-customization*="floatR"] {padding-bottom: 0px;}
+body[data-customization*="floatRS"] #body-wrapper, body[data-customization*="floatS"] #body-wrapper {box-shadow: 3px 3px 10px #888;}
+
+table td {
+	padding: 0px;
+}
+
+#activate {padding: 10px;}
+#activate a[href="init"] {position: relative;top: -15px;}
+
+#bjc {
+	text-align: center;
+}
+
+a {color: #2a2; text-decoration: none;}
+a:visited {color: #22e;}
+a:hover {color: orange;}
+
+::selection {
+	color: orange;
+	background-color: rgba(255, 255, 255, 0.2);
+}
