@@ -1243,7 +1243,7 @@
             b = color & 0xff,
             a = (color >> 24) & 0xff;
         var result = r + ',' + g + ',' + b;
-        if (a > 0 && a < 255) result += ',' + a;
+        if (a > 0 && a < 255) result += ',' + a / 255;
         return result;
     }
 })();
