@@ -422,7 +422,7 @@
     }
 
     lib.specialCaseArgs.changeEffect[0] =
-    lib.specialCaseArgs.setEffect[0] = function(arg) {
+    lib.specialCaseArgs.setEffect[0] = function(arg, obj) {
         if (arg === 'ghost' || arg === 'brightness') {
             return el('l', null,
                 el('option', null, arg)
