@@ -20,8 +20,6 @@ function onFileInput() {
     reader.readAsArrayBuffer(file);
 
     function onConversion(err, result, warnings) {
-        console.log(err, result, warnings);
-
         var output = document.getElementById('output');
         var el, li, msg;
 
