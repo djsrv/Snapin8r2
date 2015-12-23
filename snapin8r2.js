@@ -296,7 +296,7 @@
     lib.specialCaseBlocks.whenClicked = function() {
         return el('block', {s: 'receiveInteraction'},
             el('l', null,
-                el('option', null, 'clicked')
+                el('option', null, 'pressed')
             )
         );
     };
@@ -376,8 +376,6 @@
     };
 
     lib.optionArgs = {
-        receiveKey: [0],
-        reportKeyPressed: [0],
         reportDate: [0],
         doDeleteFromList: [0]
     };
@@ -387,9 +385,11 @@
         doGotoObject: {},
         changeEffect: {},
         setEffect: {},
+        receiveKey: {},
         createClone: {},
         reportTouchingObject: {},
         reportDistanceTo: {},
+        reportKeyPressed: {},
         reportAttributeOf: {},
         reportMonadic: {},
         reportListItem: {},
@@ -430,6 +430,14 @@
         }
         obj.s.warn('Unsupported graphic effect: ' + arg);
         return null;
+    };
+
+    lib.specialCaseArgs.receiveKey[0] =
+    lib.specialCaseArgs.reportKeyPressed[0] = function(arg) {
+      if (arg === 'any') arg = 'any key';
+      return el('l', null,
+          el('option', null, arg)
+      );
     };
 
     lib.specialCaseArgs.reportAttributeOf[0] = function(arg, obj) {
