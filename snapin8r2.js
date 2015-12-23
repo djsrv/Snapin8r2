@@ -296,7 +296,7 @@
     lib.specialCaseBlocks.whenClicked = function() {
         return el('block', {s: 'receiveInteraction'},
             el('l', null,
-                el('option', null, 'clicked')
+                el('option', null, 'pressed')
             )
         );
     };
