@@ -8,12 +8,12 @@
 /* jshint bitwise: false, unused: true */
 /* globals JSZip */
 
-(function() {
+(function () {
     'use strict';
 
     /* Main Snapin8r object */
 
-    function Snapin8r(file, projectName, callback) {
+    function Snapin8r (file, projectName, callback) {
         this.file = file;
         this.zip = null;
         this.projectName = projectName;
@@ -21,7 +21,7 @@
         this.warnings = [];
     }
 
-    Snapin8r.prototype.convert = function() {
+    Snapin8r.prototype.convert = function () {
         var myself = this;
       	var jsonData;
 
@@ -50,7 +50,7 @@
         // Convert the stage
         ScriptableConverter.convert(
             jsonData, this, true, varNames,
-            function(err, stage) {
+            function (err, stage) {
                 if (err) return myself.callback(err);
 
                 project.appendChild(stage);
@@ -69,13 +69,13 @@
         );
     };
 
-    Snapin8r.prototype.warn = function(warning) {
+    Snapin8r.prototype.warn = function (warning) {
         this.warnings.push(warning);
     };
 
     /* Actual exported function */
 
-    window.Snapin8r = function(file, projectName, callback) {
+    window.Snapin8r = function (file, projectName, callback) {
         new Snapin8r(file, projectName, callback).convert();
     };
 
@@ -217,17 +217,17 @@
 
     lib.specialCaseBlocks = {};
 
-    lib.specialCaseBlocks.readVariable = function(args) {
+    lib.specialCaseBlocks.readVariable = function (args) {
         return el('block', {var: args[0]});
     };
 
-    lib.specialCaseBlocks['contentsOfList:'] = function(args) { // temporary workaround
+    lib.specialCaseBlocks['contentsOfList:'] = function (args) { // temporary workaround
         return el('block', {s: 'reportJoinWords'},
             el('block', {var: args[0]})
         );
     };
 
-    lib.specialCaseBlocks.getParam = function(args, obj, customBlock) {
+    lib.specialCaseBlocks.getParam = function (args, obj, customBlock) {
         var param = args[0];
         if (customBlock) {
             param = obj.paramConversions[customBlock][param];
@@ -235,7 +235,7 @@
         return el('block', {var: param});
     };
 
-    lib.specialCaseBlocks.call = function(args, obj, customBlock) {
+    lib.specialCaseBlocks.call = function (args, obj, customBlock) {
         var spec = convertCustomBlockSpec(args[0]);
         args = args.slice(1);
         var result = el('custom-block', {s: spec, scope: obj.data.objName});
@@ -245,7 +245,7 @@
         return result;
     };
 
-    lib.specialCaseBlocks.startScene = function(args, obj, customBlock) {
+    lib.specialCaseBlocks.startScene = function (args, obj, customBlock) {
         var backdrop = args[0];
         var result;
         if (backdrop === 'next backdrop') {
@@ -266,13 +266,13 @@
         return result;
     };
 
-    lib.specialCaseBlocks.nextScene = function(args, obj) {
+    lib.specialCaseBlocks.nextScene = function (args, obj) {
         var result = el('block', {s: 'doWearNextCostume'});
         if (!obj.isStage) result = convertBlockForStage(result);
         return result;
     };
 
-    lib.specialCaseBlocks.sceneName = function() {
+    lib.specialCaseBlocks.sceneName = function () {
         return el('block', {s: 'reportAttributeOf'}, [
             el('l', null,
                 el('option', null, 'costume name')
@@ -281,7 +281,7 @@
         ]);
     };
 
-    lib.specialCaseBlocks.backgroundIndex = function(args, obj) {
+    lib.specialCaseBlocks.backgroundIndex = function (args, obj) {
         if (obj.isStage) {
             return el('block', {s: 'getCostumeIdx'});
         }
@@ -293,7 +293,7 @@
         ]);
     };
 
-    lib.specialCaseBlocks.whenClicked = function() {
+    lib.specialCaseBlocks.whenClicked = function () {
         return el('block', {s: 'receiveInteraction'},
             el('l', null,
                 el('option', null, 'pressed')
@@ -301,7 +301,7 @@
         );
     };
 
-    lib.specialCaseBlocks.stopScripts = function(args, obj, customBlock) {
+    lib.specialCaseBlocks.stopScripts = function (args, obj, customBlock) {
         var stopThisOptions = ['all', 'this script', 'this block'];
         var stopOthersOptions = ['other scripts in sprite', 'other scripts in stage'];
 
@@ -325,7 +325,7 @@
         return null;
     };
 
-    lib.specialCaseBlocks['concatenate:with:'] = function(args, obj, customBlock) {
+    lib.specialCaseBlocks['concatenate:with:'] = function (args, obj, customBlock) {
         return el('block', {s: 'reportJoinWords'},
             el('list', null, [
                 obj.convertArg(args[0], null, null, customBlock),
@@ -334,7 +334,7 @@
         );
     };
 
-    function convertBlockForStage(block) {
+    function convertBlockForStage (block) {
         return el('block', {s: 'doRun'}, [
             el('block', {s: 'reportAttributeOf'}, [
                 el('block', {s: 'reifyScript'}, [
@@ -399,20 +399,20 @@
 
     lib.specialCaseArgs.doFaceTowards[0] =
     lib.specialCaseArgs.doGotoObject[0] =
-    lib.specialCaseArgs.reportDistanceTo[0] = function(arg) {
+    lib.specialCaseArgs.reportDistanceTo[0] = function (arg) {
         return handleObjArg(arg, ['_mouse_']);
     };
-    lib.specialCaseArgs.createClone[0] = function(arg) {
+    lib.specialCaseArgs.createClone[0] = function (arg) {
         return handleObjArg(arg, ['_myself_']);
     };
-    lib.specialCaseArgs.reportTouchingObject[0] = function(arg) {
+    lib.specialCaseArgs.reportTouchingObject[0] = function (arg) {
         return handleObjArg(arg, ['_mouse_', '_edge_']);
     };
-    lib.specialCaseArgs.reportAttributeOf[1] = function(arg) {
+    lib.specialCaseArgs.reportAttributeOf[1] = function (arg) {
         return handleObjArg(arg, ['_stage_']);
     };
 
-    function handleObjArg(arg, choices) {
+    function handleObjArg (arg, choices) {
         if (choices.indexOf(arg) > -1) {
             return el('l', null,
                 el('option', null, lib.specialObjNames[arg])
@@ -422,7 +422,7 @@
     }
 
     lib.specialCaseArgs.changeEffect[0] =
-    lib.specialCaseArgs.setEffect[0] = function(arg, obj) {
+    lib.specialCaseArgs.setEffect[0] = function (arg, obj) {
         if (arg === 'ghost' || arg === 'brightness') {
             return el('l', null,
                 el('option', null, arg)
@@ -433,14 +433,14 @@
     };
 
     lib.specialCaseArgs.receiveKey[0] =
-    lib.specialCaseArgs.reportKeyPressed[0] = function(arg) {
+    lib.specialCaseArgs.reportKeyPressed[0] = function (arg) {
       if (arg === 'any') arg = 'any key';
       return el('l', null,
           el('option', null, arg)
       );
     };
 
-    lib.specialCaseArgs.reportAttributeOf[0] = function(arg, obj) {
+    lib.specialCaseArgs.reportAttributeOf[0] = function (arg, obj) {
         var options = obj.isStage ? ['costume #', 'costume name'] :
             ['x position', 'y position', 'direction', 'costume #', 'costume name', 'size'];
 
@@ -460,7 +460,7 @@
         return el('l', null, arg);
     };
 
-    lib.specialCaseArgs.reportMonadic[0] = function(arg) {
+    lib.specialCaseArgs.reportMonadic[0] = function (arg) {
         arg = arg.replace(/ \^$/, '^');
         return el('l', null,
             el('option', null, arg)
@@ -469,7 +469,7 @@
 
     lib.specialCaseArgs.reportListItem[0] =
     lib.specialCaseArgs.doInsertInList[1] =
-    lib.specialCaseArgs.doReplaceInList[0] = function(arg) {
+    lib.specialCaseArgs.doReplaceInList[0] = function (arg) {
         if (arg === 'random' || arg === 'any') {
             return el('l', null,
                 el('option', null, 'any')
@@ -535,7 +535,7 @@
 
     /* Stage and sprite conversion */
 
-    function ScriptableConverter(data, s, isStage, varNames, callback) {
+    function ScriptableConverter (data, s, isStage, varNames, callback) {
         this.data = data;
         this.s = s;
         this.isStage = isStage;
@@ -550,7 +550,7 @@
         }
     }
 
-    ScriptableConverter.prototype.convert = function() {
+    ScriptableConverter.prototype.convert = function () {
         var myself = this;
         var result = this.result = el(this.isStage ? 'stage' : 'sprite');
         var data = this.data;
@@ -594,7 +594,7 @@
         }
 
         // Convert media, variables, and scripts
-        this.convertCostumes(function(err) {
+        this.convertCostumes(function (err) {
             if (err) return myself.callback(err);
 
             try {
@@ -607,7 +607,7 @@
 
             if (myself.isStage) {
                 // Convert sprites and watchers
-                myself.convertChildren(function(err) {
+                myself.convertChildren(function (err) {
                     if (err) myself.callback(err);
                     else myself.callback(null, myself.result);
                 });
@@ -619,25 +619,25 @@
 
     // Costume conversion
 
-    ScriptableConverter.prototype.convertCostumes = function(callback) {
+    ScriptableConverter.prototype.convertCostumes = function (callback) {
         var myself = this;
         var costumes = this.data.costumes;
         var result = el('list');
         if (costumes) {
             AsyncLoop.loop(
                 costumes.length,
-                function(loop) {
+                function (loop) {
                     var costume = costumes[loop.index];
                     myself.convertCostume(
                         costume,
-                        function(err, costume) {
+                        function (err, costume) {
                             if (err) return callback(err);
                             result.appendChild(el('item', null, costume));
                             loop.next();
                         }
                     );
                 },
-                function() {
+                function () {
                     myself.result.appendChild(el('costumes', null, result));
                     callback();
                 }
@@ -645,7 +645,7 @@
         }
     };
 
-    ScriptableConverter.prototype.convertCostume = function(costume, callback) {
+    ScriptableConverter.prototype.convertCostume = function (costume, callback) {
         var resolution = costume.bitmapResolution;
 
         try {
@@ -667,7 +667,7 @@
             callback(err);
         }
 
-        function createXML(image) {
+        function createXML (image) {
             var result = el('costume');
             result.setAttribute('name', costume.costumeName);
             result.setAttribute('center-x', costume.rotationCenterX / resolution);
@@ -679,7 +679,7 @@
 
     // Sound conversion
 
-    ScriptableConverter.prototype.convertSounds = function() {
+    ScriptableConverter.prototype.convertSounds = function () {
         var sounds = this.data.sounds;
         var result = el('list');
         if (sounds) {
@@ -690,14 +690,14 @@
         this.result.appendChild(el('sounds', null, result));
     };
 
-    ScriptableConverter.prototype.convertSound = function(sound) {
+    ScriptableConverter.prototype.convertSound = function (sound) {
         var result = el('sound');
         result.setAttribute('name', sound.soundName);
         result.setAttribute('sound', getAsset(sound.soundID, sound.md5, this.s.zip));
         return result;
     };
 
-    ScriptableConverter.prototype.convertVariables = function() {
+    ScriptableConverter.prototype.convertVariables = function () {
         var vars = el('variables');
         if (!this.isStage && ('variables' in this.data || 'lists' in this.data)) {
             vars = convertVariables(this.data, this.varNames);
@@ -707,7 +707,7 @@
 
     // Separate and convert scripts, custom blocks, and comments
 
-    ScriptableConverter.prototype.convertScripts = function() {
+    ScriptableConverter.prototype.convertScripts = function () {
         var commentsData = this.data.scriptComments;
         var scriptsData = this.data.scripts;
         var blocks = el('blocks');
@@ -743,19 +743,19 @@
 
     // Convert sprites and watchers
 
-    ScriptableConverter.prototype.convertChildren = function(callback) {
+    ScriptableConverter.prototype.convertChildren = function (callback) {
         var myself = this;
         var children = this.data.children;
         var result = el('sprites');
 
         AsyncLoop.loop(
             children.length,
-            function(loop) {
+            function (loop) {
                 var child = children[loop.index];
                 if ('objName' in child) { // sprite
                     ScriptableConverter.convert(
                         child, myself.s, false, myself.varNames,
-                        function(err, sprite) {
+                        function (err, sprite) {
                             if (err) return callback(err);
                             result.appendChild(sprite);
                             loop.next();
@@ -769,7 +769,7 @@
                     loop.next();
                 }
             },
-            function() {
+            function () {
                 convertListWatchers(myself.data);
                 for (var i = 0, l = children.length; i < l; i++) {
                     var child = children[i];
@@ -780,7 +780,7 @@
             }
         );
 
-        function convertListWatchers(data) {
+        function convertListWatchers (data) {
             if ('lists' in data) {
                 for (var i = 0, l = data.lists.length; i < l; i++) {
                     result.appendChild(convertListWatcher(data.lists[i], data.objName));
@@ -791,7 +791,7 @@
 
     // Script, block, and argument conversion
 
-    ScriptableConverter.prototype.convertScript = function(script, embedded, customBlock) {
+    ScriptableConverter.prototype.convertScript = function (script, embedded, customBlock) {
         var result = el('script');
         var blocks;
         if (script) {
@@ -811,7 +811,7 @@
         return result;
     };
 
-    ScriptableConverter.prototype.convertBlock = function(block, customBlock) {
+    ScriptableConverter.prototype.convertBlock = function (block, customBlock) {
         this.lastBlockID += 1
         var blockID = this.lastBlockID;
         var spec = block[0];
@@ -837,7 +837,7 @@
         return result;
     };
 
-    ScriptableConverter.prototype.convertArg = function(arg, spec, index, customBlock) {
+    ScriptableConverter.prototype.convertArg = function (arg, spec, index, customBlock) {
         if (spec && lib.cArgs[spec] && lib.cArgs[spec].indexOf(index) > -1) { // C input
             return this.convertScript(arg, true, customBlock);
         }
@@ -866,7 +866,7 @@
 
     // Custom block definition conversion
 
-    ScriptableConverter.prototype.convertCustomBlock = function(blocks) {
+    ScriptableConverter.prototype.convertCustomBlock = function (blocks) {
         this.lastBlockID += 1
         var blockID = this.lastBlockID;
         var definition = blocks[0];
@@ -932,7 +932,7 @@
         return result;
     };
 
-    function convertCustomBlockSpec(spec) {
+    function convertCustomBlockSpec (spec) {
         // Snap! escapes different characters in custom block specs than Scratch
         // does, so they have to be fixed. The fixed versions are cached so they
         // don't have to be found repeatedly.
@@ -944,7 +944,7 @@
         }
 
         var result = spec.split(' ');
-        result.map(function(part) {
+        result.map(function (part) {
             if (part.charAt(0) === '%') { // argument
                 if (argTypes.indexOf(part.slice(1)) > -1) return part;
                 throw new Error('Invalid custom block argument type: ' + part);
@@ -956,7 +956,7 @@
 
     // Shorthand for new ScriptableConverter(...).convert()
 
-    ScriptableConverter.convert = function(data, s, isStage, varNames, callback) {
+    ScriptableConverter.convert = function (data, s, isStage, varNames, callback) {
         try {
             var converter = new ScriptableConverter(data, s, isStage, varNames, callback);
             converter.convert();
@@ -967,7 +967,7 @@
 
     /* Variable and list conversion */
 
-    function convertVariables(data, varNames) {
+    function convertVariables (data, varNames) {
         var variables = data.variables;
         var lists = data.lists;
         var result = el('variables');
@@ -1001,7 +1001,7 @@
         return result;
     }
 
-    function convertWatcher(watcher, s) {
+    function convertWatcher (watcher, s) {
         var result = el('watcher');
         if (watcher.cmd === 'getVar:') {
             if (watcher.target !== 'Stage') {
@@ -1032,7 +1032,7 @@
         return result;
     }
 
-    function convertListWatcher(list, objName) {
+    function convertListWatcher (list, objName) {
         var result = el('watcher');
         if (objName !== 'Stage') {
             result.setAttribute('scope', objName);
@@ -1052,7 +1052,7 @@
 
     /* Comment conversion */
 
-    function convertComment(data) {
+    function convertComment (data) {
         var x = data[0];
         var y = data[1];
         var width = data[2];
@@ -1072,7 +1072,7 @@
 
     /* Loop for async functions */
 
-    function AsyncLoop(iterations, func, callback) {
+    function AsyncLoop (iterations, func, callback) {
         this.index = -1;
         this.done = false;
         this.iterations = iterations;
@@ -1080,7 +1080,7 @@
         this.callback = callback;
     }
 
-    AsyncLoop.prototype.next = function() {
+    AsyncLoop.prototype.next = function () {
         if (this.done) return;
         this.index += 1;
         if (this.index < this.iterations) {
@@ -1091,13 +1091,13 @@
         }
     };
 
-    AsyncLoop.loop = function(iterations, func, callback) {
+    AsyncLoop.loop = function (iterations, func, callback) {
         new AsyncLoop(iterations, func, callback).next();
     };
 
     /* Asset utilties */
 
-    function getAsset(id, md5, zip) {
+    function getAsset (id, md5, zip) {
         var ext = md5.slice(md5.lastIndexOf('.') + 1);
         var file = zip.file(id + '.' + ext);
         if (!file) throw new Error(file + ' does not exist');
@@ -1125,9 +1125,9 @@
         return 'data:' + mimeType + ';base64,' + btoa(string);
     }
 
-    function resizeImage(data, scale, callback) {
+    function resizeImage (data, scale, callback) {
         var image = new Image();
-        image.onload = function() {
+        image.onload = function () {
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled =
@@ -1143,11 +1143,11 @@
         image.src = data;
     }
 
-    function addTextLayer(imageData, textData, callback) {
+    function addTextLayer (imageData, textData, callback) {
         var image = new Image();
-        image.onload = function() {
+        image.onload = function () {
             var text = new Image();
-            text.onload = function() {
+            text.onload = function () {
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
                 canvas.width = image.width;
@@ -1161,7 +1161,7 @@
         image.src = imageData;
     }
 
-    function fixSVG(element) { // from phosphorus by Nathan Dinsmore
+    function fixSVG (element) { // from phosphorus by Nathan Dinsmore
       	var i, l;
 
         if (element.nodeType !== 1) return;
@@ -1205,7 +1205,7 @@
 
     /* Shorthand for creating XML elements */
 
-    function el(tagName, attribs, content) {
+    function el (tagName, attribs, content) {
         var element = document.createElementNS(null, tagName);
         if (attribs) {
             for (var key in attribs) {
@@ -1226,7 +1226,7 @@
 
     /* Other stuff */
 
-    function unusedName(name, used) {
+    function unusedName (name, used) {
         if (used.indexOf(name) === -1) return name;
 
         var numberIndex = name.search(/\d+$/),
@@ -1245,7 +1245,7 @@
         return name;
     }
 
-    function convertColor(color) {
+    function convertColor (color) {
         var r = (color >> 16) & 0xff,
             g = (color >> 8) & 0xff,
             b = color & 0xff,
