@@ -27,6 +27,8 @@ function onFileInput() {
             output.removeChild(output.firstChild);
         }
         if (err) {
+            console.log(err);
+
             output.classList.add('error');
 
             el = document.createElement('span');
