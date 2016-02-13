@@ -1102,8 +1102,9 @@
 
     function getAsset (id, md5, zip) {
         var ext = md5.slice(md5.lastIndexOf('.') + 1);
-        var file = zip.file(id + '.' + ext);
-        if (!file) throw new Error(file + ' does not exist');
+        var fileName = id + '.' + ext;
+        var file = zip.file(fileName);
+        if (!file) throw new Error(fileName + ' does not exist');
         var string = '';
         if (ext === 'svg') {
             var div = document.createElement('div');
