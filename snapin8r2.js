@@ -528,9 +528,12 @@
     };
 
     lib.mimeTypes = {
+        gif: 'image/gif',
+        jpg: 'image/jpeg',
         png: 'image/png',
         svg: 'image/svg+xml',
-        wav: 'audio/x-wav'
+        wav: 'audio/x-wav',
+        mp3: 'audio/mpeg'
     };
 
     /* Stage and sprite conversion */
