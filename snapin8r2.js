@@ -817,21 +817,21 @@
     ScriptableConverter.prototype.convertBlock = function (block, customBlock) {
         this.lastBlockID += 1
         var blockID = this.lastBlockID;
-        var spec = block[0];
+        var selector = block[0];
         var args = block.slice(1);
         var result;
-        if (lib.blocks[spec]) {
-            spec = lib.blocks[spec];
-            result = el('block', {s: spec});
+        if (lib.blocks[selector]) {
+            selector = lib.blocks[selector];
+            result = el('block', {s: selector});
             for (var i = 0, l = args.length; i < l; i++) {
-                var arg = this.convertArg(args[i], spec, i, customBlock);
+                var arg = this.convertArg(args[i], selector, i, customBlock);
                 if (arg) result.appendChild(arg);
                 else return null;
             }
-        } else if (lib.specialCaseBlocks[spec]) {
-            result = lib.specialCaseBlocks[spec](args, this, customBlock);
+        } else if (lib.specialCaseBlocks[selector]) {
+            result = lib.specialCaseBlocks[selector](args, this, customBlock);
         } else {
-            this.s.warn('Unknown spec: ' + spec);
+            this.s.warn('Unknown selector: ' + selector);
             return null;
         }
         if (this.blockComments[blockID]) {
@@ -840,28 +840,28 @@
         return result;
     };
 
-    ScriptableConverter.prototype.convertArg = function (arg, spec, index, customBlock) {
-        if (spec && lib.cArgs[spec] && lib.cArgs[spec].indexOf(index) > -1) { // C input
+    ScriptableConverter.prototype.convertArg = function (arg, selector, index, customBlock) {
+        if (selector && lib.cArgs[selector] && lib.cArgs[selector].indexOf(index) > -1) { // C input
             return this.convertScript(arg, true, customBlock);
         }
         if (arg.constructor === Array) { // reporter
             return this.convertBlock(arg, customBlock) || el('l');
         }
-        if (spec) {
-            if (lib.listArgs[spec] && lib.listArgs[spec].indexOf(index) > -1) { // list input
+        if (selector) {
+            if (lib.listArgs[selector] && lib.listArgs[selector].indexOf(index) > -1) { // list input
                 return el('block', {var: arg});
             }
-            if (lib.colorArgs[spec] && lib.colorArgs[spec].indexOf(index) > -1) { // color input
+            if (lib.colorArgs[selector] && lib.colorArgs[selector].indexOf(index) > -1) { // color input
                 return el('color', null, convertColor(arg));
             }
-            if (lib.optionArgs[spec] && lib.optionArgs[spec].indexOf(index) > -1 && typeof arg !== 'number') {
+            if (lib.optionArgs[selector] && lib.optionArgs[selector].indexOf(index) > -1 && typeof arg !== 'number') {
                 // option input
                 return el('l', null,
                     el('option', null, arg)
                 );
             }
-            if (lib.specialCaseArgs[spec] && lib.specialCaseArgs[spec][index]) { // special case
-                return lib.specialCaseArgs[spec][index](arg, this);
+            if (lib.specialCaseArgs[selector] && lib.specialCaseArgs[selector][index]) { // special case
+                return lib.specialCaseArgs[selector][index](arg, this);
             }
         }
         return el('l', null, arg); // regular input
@@ -1013,12 +1013,12 @@
             result.setAttribute('var', watcher.param);
         } else {
             result.setAttribute('scope', watcher.target);
-            var spec = lib.watchers[watcher.cmd];
-            if (!spec) {
+            var selector = lib.watchers[watcher.cmd];
+            if (!selector) {
               s.warn('Unsupported watcher: ' + watcher.cmd);
               return null;
             }
-            result.setAttribute('s', spec);
+            result.setAttribute('s', selector);
         }
         var mode = lib.watcherStyles[watcher.mode] || 'normal';
         result.setAttribute('style', mode);
