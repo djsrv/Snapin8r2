@@ -831,7 +831,7 @@
         } else if (lib.specialCaseBlocks[selector]) {
             result = lib.specialCaseBlocks[selector](args, this, customBlock);
         } else {
-            this.s.warn('Unknown selector: ' + selector);
+            this.s.warn('Unknown block selector: ' + selector);
             return null;
         }
         if (this.blockComments[blockID]) {
