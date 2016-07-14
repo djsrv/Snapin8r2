@@ -376,6 +376,8 @@
     };
 
     lib.optionArgs = {
+        changeEffect: [0],
+        setEffect: [0],
         reportDate: [0],
         doDeleteFromList: [0]
     };
@@ -383,8 +385,6 @@
     lib.specialCaseArgs = {
         doFaceTowards: {},
         doGotoObject: {},
-        changeEffect: {},
-        setEffect: {},
         receiveKey: {},
         createClone: {},
         reportTouchingObject: {},
@@ -420,17 +420,6 @@
         }
         return el('l', null, arg);
     }
-
-    lib.specialCaseArgs.changeEffect[0] =
-    lib.specialCaseArgs.setEffect[0] = function (arg, obj) {
-        if (arg === 'ghost' || arg === 'brightness') {
-            return el('l', null,
-                el('option', null, arg)
-            );
-        }
-        obj.s.warn('Unsupported graphic effect: ' + arg);
-        return null;
-    };
 
     lib.specialCaseArgs.receiveKey[0] =
     lib.specialCaseArgs.reportKeyPressed[0] = function (arg) {
