@@ -40,7 +40,7 @@ function onFileInput() {
             output.appendChild(el);
 
             el = document.createElement('span');
-            el.innerHTML = 'This is likely a bug. Please report this <a href="https://github.com/djdolphin/Snapin8r2/issues">here</a>.';
+            el.innerHTML = 'This is likely a bug. Please report this <a href="https://github.com/djsrv/Snapin8r2/issues">here</a>.';
             output.appendChild(el);
         } else {
             el = document.createElement('span');
